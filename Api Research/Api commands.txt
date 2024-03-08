@@ -1,0 +1,30 @@
+Some useful api commands here for future reference.
+
+For context, {} - indicates username entry, [] - indicates optional entry, () - indicates non username entry
+Additionally, most (if not all) of the api commands for players should work with uuid as well with _uuid?{name} replacing the end of the command
+
+    https://minecraftonline.com/cgi-bin/getcorrectname?{name} - Returns the closest name or fixes incorrect capitalization for the name 
+    https://minecraftonline.com/cgi-bin/getplayerinfo?{name} - Returns /firstseen, /lastseen, /timeplayed, and /reason
+        https://minecraftonline.com/cgi-bin/gettimeonline?{name} - Returns /timeplayed
+        https://minecraftonline.com/cgi-bin/getfirstseen?{name} - Returns /firstseen
+        https://minecraftonline.com/cgi-bin/getlastseen?{name} - Returns /lastseen
+        https://minecraftonline.com/cgi-bin/getbanwhy.sh?{name} - Returns /reason
+    https://minecraftonline.com/cgi-bin/getplayerhead.sh?{name}[&(size of picture).jpg] - Returns picture of the player's head
+
+    https://minecraftonline.com/cgi-bin/getadminlist.sh - Returns a list of admins
+    https://minecraftonline.com/cgi-bin/getmodlist.sh - Returns a list of mods
+    
+    https://minecraftonline.com/cgi-bin/getplayerlist.sh - Returns a list of players currently on the server
+    https://minecraftonline.com/cgi-bin/getbancount.sh - Returns the number of banned players
+    https://minecraftonline.com/cgi-bin/getuniquevisitors.py - Returns the number of unique players on the server
+    https://minecraftonline.com/cgi-bin/getuniqueyesterday.py - Returns the number of unique players on the server yesterday
+    
+    https://minecraftonline.com/cgi-bin/getmapiteminfo.sh?{map id} - Returns data on map ids 
+    https://minecraftonline.com/cgi-bin/generatesideboxes.sh - Returns the raw information presented on main site
+    https://minecraftonline.com/cgi-bin/getwarplist.sh - Returns list of warp location and their wikipage
+    https://minecraftonline.com/cgi-bin/getrandomrenders - Returns random list of renders
+    https://minecraftonline.com/cgi-bin/tailminecraftlog.sh - Returns a brief log of the mco chat some seconds prior (maybe up to a minute?)
+    https://minecraftonline.com/cgi-bin/getrandomwikiimagelink.sh - Returns a random image from the wiki
+
+    https://minecraftonline.com/cgi-bin/gethomescount.sh - [Does not work?]
+    https://minecraftonline.com/cgi-bin/getradiostreamtitle.sh - [Does not work?]
