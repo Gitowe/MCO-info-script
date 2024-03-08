@@ -1,0 +1,8 @@
+{
+	"parent": "block/orientable",
+	"textures": {
+		"top": "oldmc/old_furnace_top",
+		"front": "default/furnace_front",
+		"side": "default/furnace_side",
+	}
+}
