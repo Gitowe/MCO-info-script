@@ -240,8 +240,8 @@ def get_staff_list_from_api(url, global_list, file_path):
         else:
             print("Failed to retrieve names from the website.")
 
-get_staff_list_from_api("https://minecraftonline.com/cgi-bin/getadminlist.sh", adminlist, mod_file)
-get_staff_list_from_api("https://minecraftonline.com/cgi-bin/getmodlist.sh", modlist, admin_file)
+get_staff_list_from_api("https://minecraftonline.com/cgi-bin/getadminlist.sh", adminlist, admin_file)
+get_staff_list_from_api("https://minecraftonline.com/cgi-bin/getmodlist.sh", modlist, mod_file)
 
 def is_user_former_staff(username, file_path):
     # Check if former staff list file exists, if not create one
