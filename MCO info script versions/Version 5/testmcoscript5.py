@@ -1,5 +1,6 @@
 import requests
 import datetime
+import time
 import pytz
 import io
 import os
@@ -201,7 +202,6 @@ def get_player_info_from_wiki(username):
     return None
 
 
-
 ##############################
 # Staff list functions/setup #
 ##############################
@@ -212,8 +212,9 @@ def get_player_list_from_api(player_list):
     url = f"https://minecraftonline.com/cgi-bin/getplayerlist.sh"
     response = requests.get(url)
     if response.status_code == 200:
-        names = response.text.strip().split("\n")
-        player_list.extend
+        request_list = response.text
+        names = request_list.strip().split(", ")
+        player_list.extend(names)
         return player_list
     else:
         return None
@@ -383,9 +384,85 @@ def update_excel_operation():
 # Server Info page functions #
 ##############################
 
+def get_player_head_from_api_small(username):
+    url = f"https://minecraftonline.com/cgi-bin/getplayerhead.sh?{username}&16.png"
+    response = requests.get(url)
+    if response.status_code == 200:
+        image = Image.open(io.BytesIO(response.content))
+        return image
+    else:
+        return 
 
+def print_player_head(username, frame, row, column):
+    time.sleep(1.0)
+    image = get_player_head_from_api_small(username)
+    if image:
+        photo = ImageTk.PhotoImage(image)
+                
+        player_head_label = tk.Label(frame, image=photo, bg='#383838')
+        player_head_label.image = photo
+        player_head_label.grid(row=row, column=column, padx=5, pady=5)  # Place the image label in the frame
+        print(username)
+    else:
+        print("Error loading player head")
 
-# Displays the Player Info page
+def print_player_list(player_list, frame):
+    row = 0
+    column = 0
+    global modlist
+    global adminlist
+    
+    online_admin_list = sorted([username for username in player_list if adminlist is not None and username in adminlist])
+    online_mod_list = sorted([username for username in player_list if modlist is not None and username in modlist])
+    online_player_list = sorted([username for username in player_list if username not in modlist and username not in adminlist])
+
+    combined_player_list = online_admin_list + online_mod_list + online_player_list
+
+    for username in combined_player_list:
+        print_player_head(username, frame, row, column)
+        
+        if username in adminlist:
+            fg_color = admin_color
+        elif username in modlist:
+            fg_color = mod_color
+        else:
+            fg_color = '#E1E1E1'
+
+        username_label = tk.Label(frame, text=f"{username}", font=tkFont.Font(size=9), fg=fg_color, bg='#383838')
+        username_label.grid(row=row, column=column + 1, padx=5, pady=2, sticky="w")
+        row += 1
+        
+        if row >= 10:  # Change this value to adjust vertical distance
+            row = 0
+            column += 2
+
+def player_list_screen():
+    
+    global mod_color
+    global admin_color
+    global banned_color
+    global modlist
+    global adminlist
+    
+    clear_ui()
+    
+    back_button = tk.Button(window, text="Back", command=server_info_screen, bg='#545454', fg='#E1E1E1')
+    back_button.pack(pady=5, padx=10, anchor='nw')  # 'nw' stands for northwest, i.e., top-left corner
+   
+    player_list = []
+    
+    get_player_list_from_api(player_list)
+    print(player_list)
+    
+    player_list_title = tk.Label(window, text="Players currently online:", font=tkFont.Font(weight="bold", size=11), bg='#383838', fg='#E1E1E1')
+    player_list_title.pack()
+   
+    if player_list:
+        frame = tk.Frame(window, bg='#383838')
+        frame.pack(pady=5, padx=10)  # Place the frame in the center of the window
+        
+        print_player_list(player_list, frame)
+        
 def server_info_screen():
     global entry
     
@@ -393,20 +470,14 @@ def server_info_screen():
     clear_ui()
     
     back_button = tk.Button(window, text="Back", command=show_menu, bg='#545454', fg='#E1E1E1')
-    back_button.pack(pady=5, padx=10, anchor='nw')  # 'nw' stands for northwest, i.e., top-left corner
-   
-  
-  
+    back_button.pack(pady=5, padx=10, anchor='nw')  
 
-    button = tk.Button(window, text="Get Info", command=player_info_operation, bg='#545454', fg='#E1E1E1')
+    button = tk.Button(window, text="Players Online", command=player_list_screen, bg='#545454', fg='#E1E1E1')
     button.pack(pady=10)
-    
-    
     
 # https://minecraftonline.com/cgi-bin/getplayerlist.sh - Returns a list of players currently on the server
 # https://minecraftonline.com/cgi-bin/getbancount.sh - Returns the number of banned players
 # https://minecraftonline.com/cgi-bin/getuniquevisitors.py - Returns the number of unique players on the server
-
 
 
 ##############################
