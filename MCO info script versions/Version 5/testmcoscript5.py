@@ -201,6 +201,22 @@ def get_player_info_from_wiki(username):
         
     return None
 
+def get_ban_count_from_api():
+    url = f"https://minecraftonline.com/cgi-bin/getbancount.sh"
+    response = requests.get(url)
+    if response.status_code == 200:
+        return response.text.strip().split("\n")
+    else:
+        return None
+    
+def get_unique_visitors_from_api():
+    url = f"https://minecraftonline.com/cgi-bin/getuniquevisitors.py"
+    response = requests.get(url)
+    if response.status_code == 200:
+        return response.text.strip().split("\n")
+    else:
+        return None
+
 
 ##############################
 # Staff list functions/setup #
@@ -475,8 +491,14 @@ def server_info_screen():
     button = tk.Button(window, text="Players Online", command=player_list_screen, bg='#545454', fg='#E1E1E1')
     button.pack(pady=10)
     
-# https://minecraftonline.com/cgi-bin/getplayerlist.sh - Returns a list of players currently on the server
-# https://minecraftonline.com/cgi-bin/getbancount.sh - Returns the number of banned players
+    bancount = get_ban_count_from_api()
+    bancount_label = tk.Label(window, text=f"Current number of bans is: {bancount}", font=tkFont.Font(weight="bold", size=11), fg=admin_color, bg='#383838')
+    bancount_label.pack()
+    
+    uniquevisitors = get_unique_visitors_from_api()
+    uniquevisitors_label = tk.Label(window, text=f"Current number of bans is: {uniquevisitors}", font=tkFont.Font(weight="bold", size=11), fg=admin_color, bg='#383838')
+    uniquevisitors_label.pack()
+    
 # https://minecraftonline.com/cgi-bin/getuniquevisitors.py - Returns the number of unique players on the server
 
 
