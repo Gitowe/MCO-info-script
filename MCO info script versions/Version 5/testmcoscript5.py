@@ -41,10 +41,10 @@ donor_color = '#00AA00'
 
 # 👍 https://minecraftonline.com/cgi-bin/getadminlist.sh - Returns a list of admins
 # 👍 https://minecraftonline.com/cgi-bin/getmodlist.sh - Returns a list of mods
-# https://minecraftonline.com/cgi-bin/getplayerlist.sh - Returns a list of players currently on the server
-# https://minecraftonline.com/cgi-bin/getbancount.sh - Returns the number of banned players
-# https://minecraftonline.com/cgi-bin/getuniquevisitors.py - Returns the number of unique players on the server
-# https://minecraftonline.com/cgi-bin/getuniqueyesterday.py - Returns the number of unique players on the server yesterday
+# 👍 https://minecraftonline.com/cgi-bin/getplayerlist.sh - Returns a list of players currently on the server
+# 👍 https://minecraftonline.com/cgi-bin/getbancount.sh - Returns the number of banned players
+# 👍 https://minecraftonline.com/cgi-bin/getuniquevisitors.py - Returns the number of unique players on the server
+# 👍 https://minecraftonline.com/cgi-bin/getuniqueyesterday.py - Returns the number of unique players on the server yesterday
 
 
 
@@ -146,8 +146,8 @@ def get_real_player_name(username):
             return "NOTFOUND"
         elif response.text.strip() == "INVALID":
             return "INVALID"
-        input_string = response.text.strip().split("\n")
-        result = remove_brackets(input_string)
+        cleaned_response = response.text.strip().split("\n")
+        result = remove_brackets(cleaned_response)
         return result
     else:
         return None
@@ -168,6 +168,15 @@ def get_player_head_from_api(username):
         return image
     else:
         return None
+    
+def get_player_head_from_api_small(username):
+    url = f"https://minecraftonline.com/cgi-bin/getplayerhead.sh?{username}&16.png"
+    response = requests.get(url)
+    if response.status_code == 200:
+        image = Image.open(io.BytesIO(response.content))
+        return image
+    else:
+        return 
 
 # Gets information from the MCO wiki (specifically from the userpage)
 def get_player_info_from_wiki(username):
@@ -205,7 +214,9 @@ def get_ban_count_from_api():
     url = f"https://minecraftonline.com/cgi-bin/getbancount.sh"
     response = requests.get(url)
     if response.status_code == 200:
-        return response.text.strip().split("\n")
+        cleaned_response = response.text.strip().split("\n")
+        result = remove_brackets(cleaned_response)
+        return result
     else:
         return None
     
@@ -213,7 +224,19 @@ def get_unique_visitors_from_api():
     url = f"https://minecraftonline.com/cgi-bin/getuniquevisitors.py"
     response = requests.get(url)
     if response.status_code == 200:
-        return response.text.strip().split("\n")
+        cleaned_response = response.text.strip().split("\n")
+        result = remove_brackets(cleaned_response)
+        return result
+    else:
+        return None
+    
+def get_yesterday_visitors_from_api():
+    url = f"https://minecraftonline.com/cgi-bin/getuniqueyesterday.py"
+    response = requests.get(url)
+    if response.status_code == 200:
+        cleaned_response = response.text.strip().split("\n")
+        result = remove_brackets(cleaned_response)
+        return result
     else:
         return None
 
@@ -400,15 +423,6 @@ def update_excel_operation():
 # Server Info page functions #
 ##############################
 
-def get_player_head_from_api_small(username):
-    url = f"https://minecraftonline.com/cgi-bin/getplayerhead.sh?{username}&16.png"
-    response = requests.get(url)
-    if response.status_code == 200:
-        image = Image.open(io.BytesIO(response.content))
-        return image
-    else:
-        return 
-
 def print_player_head(username, frame, row, column):
     time.sleep(1.0)
     image = get_player_head_from_api_small(username)
@@ -448,7 +462,7 @@ def print_player_list(player_list, frame):
         username_label.grid(row=row, column=column + 1, padx=5, pady=2, sticky="w")
         row += 1
         
-        if row >= 10:  # Change this value to adjust vertical distance
+        if row >= 15:  # Change this value to adjust vertical distance
             row = 0
             column += 2
 
@@ -492,12 +506,16 @@ def server_info_screen():
     button.pack(pady=10)
     
     bancount = get_ban_count_from_api()
-    bancount_label = tk.Label(window, text=f"Current number of bans is: {bancount}", font=tkFont.Font(weight="bold", size=11), fg=admin_color, bg='#383838')
+    bancount_label = create_default_label(window, f"Current number of bans is: {bancount}", None)
     bancount_label.pack()
     
     uniquevisitors = get_unique_visitors_from_api()
-    uniquevisitors_label = tk.Label(window, text=f"Current number of bans is: {uniquevisitors}", font=tkFont.Font(weight="bold", size=11), fg=admin_color, bg='#383838')
+    uniquevisitors_label = create_default_label(window, f"Current number of unique players is: {uniquevisitors}", None)
     uniquevisitors_label.pack()
+    
+    yesterdayvisitors = get_yesterday_visitors_from_api()
+    yesterdayvisitors_label = create_default_label(window, f"Current number of unique players is: {yesterdayvisitors}", None)
+    yesterdayvisitors_label.pack()
     
 # https://minecraftonline.com/cgi-bin/getuniquevisitors.py - Returns the number of unique players on the server
 
@@ -719,7 +737,7 @@ def show_menu():
 
 # Application window setup stuff
 window = tk.Tk()
-window.title("MCO Player Information")
+window.title("Fuzbol's MCO Information Script")
 
 window.geometry("600x650") 
 window.configure(bg='#383838')
