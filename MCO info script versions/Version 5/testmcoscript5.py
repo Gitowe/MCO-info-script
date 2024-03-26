@@ -514,7 +514,7 @@ def server_info_screen():
     uniquevisitors_label.pack()
     
     yesterdayvisitors = get_yesterday_visitors_from_api()
-    yesterdayvisitors_label = create_default_label(window, f"Current number of unique players is: {yesterdayvisitors}", None)
+    yesterdayvisitors_label = create_default_label(window, f"Number of unique players yesterday was: {yesterdayvisitors}", None)
     yesterdayvisitors_label.pack()
     
 # https://minecraftonline.com/cgi-bin/getuniquevisitors.py - Returns the number of unique players on the server
