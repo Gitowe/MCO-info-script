@@ -13,6 +13,7 @@ import openpyxl
 from bs4 import BeautifulSoup
 from PIL import Image, ImageTk
 
+from api_functions import *
 
 # Global variables 
 
@@ -27,7 +28,6 @@ donor_color = '#00AA00'
 
 # I will list some useful api commands here for future reference.
 # For some reason there is very little documentation on the wiki or github, so I guess I will store the information here for now.
-# Lazy ass devs smgdh. 
 
 # For context, {} - indicates username entry, [] - indicates optional entry, () - indicates non username entry
 # Additionally, most (if not all) of the api commands for players should work with uuid as well with _uuid?{name} replacing the end of the command
@@ -78,7 +78,6 @@ def convert_to_mm_dd_yyyy(timestamp):
     return converted_time.strftime('%m/%d/%Y')
 
 
-
 ####################################
 # Functions for tkinter operations #
 ####################################
@@ -122,205 +121,6 @@ def create_default_label(parent, text, header):
     else:
         normal_label = tk.Label(parent, text=text, bg='#383838', fg='#E1E1E1')  # Adjust color as needed
         return normal_label
-    
-    
-
-#######################################
-# Functions for api calling functions #
-#######################################
-
-
-
-def remove_brackets(input_string):
-    lines = input_string
-    cleaned_lines = [line[2:-2] if line.startswith("['") and line.endswith("']") else line for line in lines]
-    
-    cleaned_string = "\n".join(cleaned_lines)
-    return cleaned_string
-
-def get_real_player_name(username):
-    url = f"https://minecraftonline.com/cgi-bin/getcorrectname?{username}"
-    response = requests.get(url)
-    if response.status_code == 200:
-        if response.text.strip() == "NOTFOUND":
-            return "NOTFOUND"
-        elif response.text.strip() == "INVALID":
-            return "INVALID"
-        cleaned_response = response.text.strip().split("\n")
-        result = remove_brackets(cleaned_response)
-        return result
-    else:
-        return None
-
-def get_player_info_from_api(username):
-    url = f"https://minecraftonline.com/cgi-bin/getplayerinfo?{username}"
-    response = requests.get(url)
-    if response.status_code == 200:
-        return response.text.strip().split("\n")
-    else:
-        return None
-    
-def get_player_head_from_api(username):
-    url = f"https://minecraftonline.com/cgi-bin/getplayerhead.sh?{username}&64.png"
-    response = requests.get(url)
-    if response.status_code == 200:
-        image = Image.open(io.BytesIO(response.content))
-        return image
-    else:
-        return None
-    
-def get_player_head_from_api_small(username):
-    url = f"https://minecraftonline.com/cgi-bin/getplayerhead.sh?{username}&16.png"
-    response = requests.get(url)
-    if response.status_code == 200:
-        image = Image.open(io.BytesIO(response.content))
-        return image
-    else:
-        return 
-
-# Gets information from the MCO wiki (specifically from the userpage)
-def get_player_info_from_wiki(username):
-    user_info = {}
-    user_page_url = f"https://minecraftonline.com/wiki/User:{username}"
-    
-    try:
-        response = requests.get(user_page_url)
-        if response.status_code == 200:
-            soup = BeautifulSoup(response.content, 'html.parser')
-            
-            # Find the user infobox
-            infobox = soup.find("table", class_="infobox")
-            if infobox:
-                rows = infobox.find_all("tr")
-                for row in rows:
-                    # Extracting key-value pairs from the infobox
-                    cells = row.find_all(["th", "td"])
-                    if len(cells) == 2:
-                        key = cells[0].text.strip()
-                        value = cells[1].text.strip()
-                        user_info[key] = value
-            
-            return user_info
-        
-        else:
-            print(f"Failed to retrieve user information. Error code: {response.status_code}")
-            return None
-    except Exception as e:
-        print(f"An error occurred: {str(e)}")
-        
-    return None
-
-def get_ban_count_from_api():
-    url = f"https://minecraftonline.com/cgi-bin/getbancount.sh"
-    response = requests.get(url)
-    if response.status_code == 200:
-        cleaned_response = response.text.strip().split("\n")
-        result = remove_brackets(cleaned_response)
-        return result
-    else:
-        return None
-    
-def get_unique_visitors_from_api():
-    url = f"https://minecraftonline.com/cgi-bin/getuniquevisitors.py"
-    response = requests.get(url)
-    if response.status_code == 200:
-        cleaned_response = response.text.strip().split("\n")
-        result = remove_brackets(cleaned_response)
-        return result
-    else:
-        return None
-    
-def get_yesterday_visitors_from_api():
-    url = f"https://minecraftonline.com/cgi-bin/getuniqueyesterday.py"
-    response = requests.get(url)
-    if response.status_code == 200:
-        cleaned_response = response.text.strip().split("\n")
-        result = remove_brackets(cleaned_response)
-        return result
-    else:
-        return None
-
-
-##############################
-# Staff list functions/setup #
-##############################
-
-
-
-def get_player_list_from_api(player_list):
-    url = f"https://minecraftonline.com/cgi-bin/getplayerlist.sh"
-    response = requests.get(url)
-    if response.status_code == 200:
-        request_list = response.text
-        names = request_list.strip().split(", ")
-        player_list.extend(names)
-        return player_list
-    else:
-        return None
-
-mod_file = "modlist.txt"
-modlist = []
-admin_file = "adminlist.txt"
-adminlist = []
-
-def get_staff_list_from_api(url, global_list, file_path):
-    
-    if os.path.exists(file_path):
-        # Read from the existing file
-        with open(file_path, "r") as file:
-            global_list.extend(file.read().strip().split("\n"))
-    else:
-        response = requests.get(url)
-        if response.status_code == 200:
-            names = response.text.strip().split("\n")
-            global_list.extend(names)
-            # Write the data into the file
-            with open(file_path, "w") as file:
-                file.write("\n".join(names))
-        else:
-            print("Failed to retrieve names from the website.")
-
-get_staff_list_from_api("https://minecraftonline.com/cgi-bin/getadminlist.sh", adminlist, admin_file)
-get_staff_list_from_api("https://minecraftonline.com/cgi-bin/getmodlist.sh", modlist, mod_file)
-
-def is_user_former_staff(username, file_path):
-    # Check if former staff list file exists, if not create one
-    
-    if not os.path.exists(file_path):
-        with open(file_path, "w") as file:
-            pass  # Create an empty file
-
-    # Check if the user is listed in the former staff list file
-    with open(file_path, "r") as file:
-        if username in file.read().split("\n"):
-            return True  # User is a former staff
-
-    user_page_url = f"https://minecraftonline.com/wiki/User:{username}"
-
-    try:
-        response = requests.get(user_page_url)
-        if response.status_code == 200:
-            soup = BeautifulSoup(response.content, 'html.parser')
-
-            # Search for the categories section
-            categories_section = soup.find("div", class_="mw-normal-catlinks")
-            if categories_section:
-                # Check if "Former staff" category is present
-                categories = categories_section.find_all("a")
-                for category in categories:
-                    if "Former_staff" in category.get("href", ""):
-                        # Add the user to the former staff list file
-                        with open(file_path, "a") as file:
-                            file.write(username + "\n")
-                        return True  # User is a former staff
-
-        else:
-            print(f"Failed to retrieve user information. Error code: {response.status_code}")
-    except Exception as e:
-        print(f"An error occurred: {str(e)}")
-
-    return False
-
 
 
 ###############################
@@ -419,23 +219,80 @@ def update_excel_operation():
         
         
         
+#######################################
+# Updated Player Lists page functions #
+#######################################
+        
+        
+        
+def update_lists_screen():
+    
+    clear_ui()
+    
+    back_button = tk.Button(window, text="Back", command=show_menu, bg='#545454', fg='#E1E1E1')
+    back_button.pack(pady=5, padx=10, anchor='nw')  # 'nw' stands for northwest, i.e., top-left corner
+    
+    return 0 
+    
+    
+        
+        
+        
 ##############################
 # Server Info page functions #
 ##############################
 
-def print_player_head(username, frame, row, column):
-    time.sleep(1.0)
-    image = get_player_head_from_api_small(username)
-    if image:
-        photo = ImageTk.PhotoImage(image)
-                
-        player_head_label = tk.Label(frame, image=photo, bg='#383838')
-        player_head_label.image = photo
-        player_head_label.grid(row=row, column=column, padx=5, pady=5)  # Place the image label in the frame
-        print(username)
-    else:
-        print("Error loading player head")
+def server_info_screen():
+    global entry
+    
+    # Clear the previous UI elements
+    clear_ui()
+    
+    back_button = tk.Button(window, text="Back", command=show_menu, bg='#545454', fg='#E1E1E1')
+    back_button.pack(pady=5, padx=10, anchor='nw')  
 
+    button = tk.Button(window, text="Players Online", command=player_online_screen, bg='#545454', fg='#E1E1E1')
+    button.pack(pady=10)
+    
+    bancount = get_ban_count_from_api()
+    bancount_label = create_default_label(window, f"Current number of bans is: {bancount}", None)
+    bancount_label.pack()
+    
+    uniquevisitors = get_unique_visitors_from_api()
+    uniquevisitors_label = create_default_label(window, f"Current number of unique players is: {uniquevisitors}", None)
+    uniquevisitors_label.pack()
+    
+    yesterdayvisitors = get_yesterday_visitors_from_api()
+    yesterdayvisitors_label = create_default_label(window, f"Number of unique players yesterday was: {yesterdayvisitors}", None)
+    yesterdayvisitors_label.pack()
+
+def player_online_screen():
+    
+    global mod_color
+    global admin_color
+    global banned_color
+    global modlist
+    global adminlist
+    
+    clear_ui()
+    
+    back_button = tk.Button(window, text="Back", command=server_info_screen, bg='#545454', fg='#E1E1E1')
+    back_button.pack(pady=5, padx=10, anchor='nw')  # 'nw' stands for northwest, i.e., top-left corner
+   
+    player_list = []
+    
+    get_player_list_from_api(player_list)
+    print(player_list)
+    
+    player_list_title = tk.Label(window, text="Players currently online:", font=tkFont.Font(weight="bold", size=11), bg='#383838', fg='#E1E1E1')
+    player_list_title.pack()
+   
+    if player_list:
+        frame = tk.Frame(window, bg='#383838')
+        frame.pack(pady=5, padx=10)  # Place the frame in the center of the window
+        
+        print_player_list(player_list, frame)
+        
 def print_player_list(player_list, frame):
     row = 0
     column = 0
@@ -466,58 +323,19 @@ def print_player_list(player_list, frame):
             row = 0
             column += 2
 
-def player_list_screen():
-    
-    global mod_color
-    global admin_color
-    global banned_color
-    global modlist
-    global adminlist
-    
-    clear_ui()
-    
-    back_button = tk.Button(window, text="Back", command=server_info_screen, bg='#545454', fg='#E1E1E1')
-    back_button.pack(pady=5, padx=10, anchor='nw')  # 'nw' stands for northwest, i.e., top-left corner
-   
-    player_list = []
-    
-    get_player_list_from_api(player_list)
-    print(player_list)
-    
-    player_list_title = tk.Label(window, text="Players currently online:", font=tkFont.Font(weight="bold", size=11), bg='#383838', fg='#E1E1E1')
-    player_list_title.pack()
-   
-    if player_list:
-        frame = tk.Frame(window, bg='#383838')
-        frame.pack(pady=5, padx=10)  # Place the frame in the center of the window
-        
-        print_player_list(player_list, frame)
-        
-def server_info_screen():
-    global entry
-    
-    # Clear the previous UI elements
-    clear_ui()
-    
-    back_button = tk.Button(window, text="Back", command=show_menu, bg='#545454', fg='#E1E1E1')
-    back_button.pack(pady=5, padx=10, anchor='nw')  
+def print_player_head(username, frame, row, column):
+    time.sleep(1.0)
+    image = get_player_head_from_api_small(username)
+    if image:
+        photo = ImageTk.PhotoImage(image)
+                
+        player_head_label = tk.Label(frame, image=photo, bg='#383838')
+        player_head_label.image = photo
+        player_head_label.grid(row=row, column=column, padx=5, pady=5)  # Place the image label in the frame
+        print(username)
+    else:
+        print("Error loading player head")
 
-    button = tk.Button(window, text="Players Online", command=player_list_screen, bg='#545454', fg='#E1E1E1')
-    button.pack(pady=10)
-    
-    bancount = get_ban_count_from_api()
-    bancount_label = create_default_label(window, f"Current number of bans is: {bancount}", None)
-    bancount_label.pack()
-    
-    uniquevisitors = get_unique_visitors_from_api()
-    uniquevisitors_label = create_default_label(window, f"Current number of unique players is: {uniquevisitors}", None)
-    uniquevisitors_label.pack()
-    
-    yesterdayvisitors = get_yesterday_visitors_from_api()
-    yesterdayvisitors_label = create_default_label(window, f"Number of unique players yesterday was: {yesterdayvisitors}", None)
-    yesterdayvisitors_label.pack()
-    
-# https://minecraftonline.com/cgi-bin/getuniquevisitors.py - Returns the number of unique players on the server
 
 
 ##############################
@@ -731,6 +549,9 @@ def show_menu():
     
     server_info_button = tk.Button(window, text="Server Info", command=server_info_screen, bg='#545454', fg='#E1E1E1')
     server_info_button.pack(pady=10, side=TOP)
+    
+    update_lists_button = tk.Button(window, text="Update Player Lists", command=update_lists_screen, bg='#545454', fg='#E1E1E1')
+    update_lists_button.pack(pady=10, side=TOP)
 
     update_excel_button = tk.Button(window, text="Update Excel", command=update_excel_screen, bg='#545454', fg='#E1E1E1')
     update_excel_button.pack(pady=10, side=TOP)
