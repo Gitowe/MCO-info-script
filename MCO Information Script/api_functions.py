@@ -197,23 +197,6 @@ def get_former_staff_list_from_wiki(url, global_list, file_path):
             for user in user_list:
                 file.write(user + "\n")
 
-def get_former_staff_list_from_wiki(url, global_list, file_path):
-    
-    if os.path.exists(file_path):
-        # Read from the existing file
-        with open(file_path, "r") as file:
-            global_list.extend(file.read().strip().split("\n"))
-    else:
-        response = requests.get(url)
-        if response.status_code == 200:
-            names = response.text.strip().split("\n")
-            global_list.extend(names)
-            # Write the data into the file
-            with open(file_path, "w") as file:
-                file.write("\n".join(names))
-        else:
-            print("Failed to retrieve names from the website.")
-
 def get_player_list_from_wiki(url):
     return
 
