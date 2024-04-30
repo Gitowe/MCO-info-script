@@ -149,57 +149,6 @@ def get_player_list_from_api(player_list):
 
 
 
-mod_file = "modlist.txt"
-modlist = []
-admin_file = "adminlist.txt"
-adminlist = []
-formerstaff_file = "formerstaff.txt"
-formerstaff = []
-
-def get_staff_list_from_api(url, global_list, file_path):
-    
-    if os.path.exists(file_path):
-        # Read from the existing file
-        with open(file_path, "r") as file:
-            global_list.extend(file.read().strip().split("\n"))
-    else:
-        response = requests.get(url)
-        if response.status_code == 200:
-            names = response.text.strip().split("\n")
-            global_list.extend(names)
-            # Write the data into the file
-            with open(file_path, "w") as file:
-                file.write("\n".join(names))
-        else:
-            print("Failed to retrieve names from the website.")
-
-get_staff_list_from_api("https://minecraftonline.com/cgi-bin/getadminlist.sh", adminlist, admin_file)
-get_staff_list_from_api("https://minecraftonline.com/cgi-bin/getmodlist.sh", modlist, mod_file)
-
-url = "https://minecraftonline.com/wiki/Category:Former_staff"
-
-# Send a GET request to the URL
-response = requests.get(url)
-
-def get_former_staff_list_from_wiki(url, global_list, file_path):
-    response = requests.get(url)
-    
-    if response.status_code == 200:
-
-        soup = BeautifulSoup(response.content, 'html.parser')
-        links = soup.find_all("a")
-
-        user_links = [link.get("href")[11:] for link in links if link.get("href") and link.get("href").startswith("/wiki/User:")]
-        user_list = list(set(user_links))
-        user_list.sort()
-
-        with open(file_path, "w") as file:
-            for user in user_list:
-                file.write(user + "\n")
-
-def get_player_list_from_wiki(url):
-    return
-
 def is_user_former_staff(username, file_path):
     # Check if former staff list file exists, if not create one
     
@@ -240,6 +189,94 @@ def is_user_former_staff(username, file_path):
 
 
 
-############################
-# God list functions/setup #
-############################
+########################
+# Player list functions#
+########################
+        
+        
+        
+def read_players(player_type):
+    # Read content from the text file
+    with open("players.txt", "r") as file:
+        lines = file.readlines()
+
+    # Initialize a list to store player names
+    player_names = []
+
+    # Flag to check if the current line belongs to the specified player type
+    player_type_found = False
+
+    # Iterate through the lines in the file
+    for line in lines:
+        if line.strip() == f"-[{player_type}]-":
+            player_type_found = True
+        elif player_type_found:
+            # If player type header is found, add subsequent names until next header is encountered
+            if line.strip() == "":
+                break
+            player_names.append(line.strip())
+
+    return player_names
+
+def fetch_and_store_players(url, player_type, source="wiki"):
+
+    if source == "wiki":
+        
+        response = requests.get(url)
+        if response.status_code == 200:
+            soup = BeautifulSoup(response.content, 'html.parser')
+            links = soup.find_all("a")
+            user_links = [link.get("href")[11:] for link in links if link.get("href") and link.get("href").startswith("/wiki/User:")]
+            user_list = list(set(user_links))
+            user_list.sort()
+        else:
+            print("Failed to fetch the wiki page. Status code:", response.status_code)
+            return
+
+    elif source == "api":
+        
+        response = requests.get(url)
+        if response.status_code == 200:
+            user_list = response.text.strip().split("\n")
+        else:
+            print("Failed to retrieve names from the api.Status code:", response.status_code)
+            return
+        
+    else:
+        print("Invalid source type.")
+        return
+
+    if not os.path.exists("players.txt"):
+        with open("players.txt", "w") as file:
+            file.write(f"-[{player_type}]-\n")
+            for user in user_list:
+                file.write(user + "\n")
+            file.write("\n")
+        print(f"Created players.txt and saved names of {player_type}.")
+        return
+
+    with open("players.txt", "r") as file:
+        lines = file.readlines()
+
+    header_index = None
+    for i, line in enumerate(lines):
+        if line.strip() == f"-[{player_type}]-":
+            header_index = i
+            break
+
+    new_content = f"-[{player_type}]-\n"
+    for user in user_list:
+        new_content += user + "\n"
+    new_content += "\n"
+
+    if header_index is not None:
+        lines[header_index+1:] = new_content.splitlines(True)[1:]
+    else:
+        lines.append(new_content)
+
+    with open("players.txt", "w") as file:
+        file.writelines(lines)
+
+    print(f"Names of {player_type} have been saved/updated in players.txt.")
+
+

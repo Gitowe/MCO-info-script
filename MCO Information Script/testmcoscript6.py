@@ -15,7 +15,13 @@ from PIL import Image, ImageTk
 
 from api_functions import *
 
-# Global variables 
+print("\nScript is starting, this might take a couple of seconds...")
+
+###################
+# Global variables# 
+###################
+
+
 
 entry = None
 
@@ -24,33 +30,25 @@ mod_color = '#55FFFF'
 admin_color = '#FF5555'
 donor_color = '#00AA00'
 
+if not os.path.exists("players.txt"):
+    fetch_and_store_players("https://minecraftonline.com/wiki/Category:Former_staff", "Former Staff", "wiki")
+    fetch_and_store_players("https://minecraftonline.com/wiki/Category:God_donor", "God Donor", "wiki")
+    fetch_and_store_players("https://minecraftonline.com/cgi-bin/getadminlist.sh", "Admins", "api")
+    fetch_and_store_players("https://minecraftonline.com/cgi-bin/getmodlist.sh", "Moderators", "api")
 
+formerstafflist = read_players("Former Staff")
+godlist = read_players("God Donor")
+adminlist = read_players("Admins")
+modlist = read_players("Moderators")
 
-# I will list some useful api commands here for future reference.
-# For some reason there is very little documentation on the wiki or github, so I guess I will store the information here for now.
-
-# For context, {} - indicates username entry, [] - indicates optional entry, () - indicates non username entry
-# Additionally, most (if not all) of the api commands for players should work with uuid as well with _uuid?{name} replacing the end of the command
-
-# 👍 https://minecraftonline.com/cgi-bin/getcorrectname?{name} - Returns the closest name or fixes incorrect capitalization for the name 
-# 👍 https://minecraftonline.com/cgi-bin/getplayerinfo?{name} - Returns /firstseen, /lastseen, /timeplayed, and /reason
-#       https://minecraftonline.com/cgi-bin/gettimeonline{name} - Returns /timeplayed
-#       https://minecraftonline.com/cgi-bin/getfirstseen{name} - Returns /firstseen
-#       https://minecraftonline.com/cgi-bin/getlastseen{name} - Returns /lastseen
-# 👍 https://minecraftonline.com/cgi-bin/getplayerhead.sh?{name}[&(size of picture).jpg] - Returns picture of the player's head
-
-# 👍 https://minecraftonline.com/cgi-bin/getadminlist.sh - Returns a list of admins
-# 👍 https://minecraftonline.com/cgi-bin/getmodlist.sh - Returns a list of mods
-# 👍 https://minecraftonline.com/cgi-bin/getplayerlist.sh - Returns a list of players currently on the server
-# 👍 https://minecraftonline.com/cgi-bin/getbancount.sh - Returns the number of banned players
-# 👍 https://minecraftonline.com/cgi-bin/getuniquevisitors.py - Returns the number of unique players on the server
-# 👍 https://minecraftonline.com/cgi-bin/getuniqueyesterday.py - Returns the number of unique players on the server yesterday
+print("\nPlayer lists have been fetched and stored.")
 
 
 
 ##################################
 # Functions for basic operations #
 ##################################
+
 
 
 # Converts time (in seconds) into other time measurements
@@ -76,6 +74,7 @@ def convert_unix_timestamp(timestamp):
 def convert_to_mm_dd_yyyy(timestamp):
     converted_time = datetime.datetime.fromtimestamp(timestamp)
     return converted_time.strftime('%m/%d/%Y')
+
 
 
 ####################################
@@ -121,6 +120,7 @@ def create_default_label(parent, text, header):
     else:
         normal_label = tk.Label(parent, text=text, bg='#383838', fg='#E1E1E1')  # Adjust color as needed
         return normal_label
+
 
 
 ###############################
@@ -230,17 +230,39 @@ def update_lists_screen():
     clear_ui()
     
     back_button = tk.Button(window, text="Back", command=show_menu, bg='#545454', fg='#E1E1E1')
-    back_button.pack(pady=5, padx=10, anchor='nw')  # 'nw' stands for northwest, i.e., top-left corner
+    back_button.pack(pady=5, padx=10, anchor='nw')
+    
+    button = tk.Button(window, text="Refresh Player Lists", command=refresh_player_lists, bg='#545454', fg='#E1E1E1')
+    button.pack(pady=10)
+    
+def refresh_player_lists():
+    
+    print("\nRefreshing player lists...")
+    
+    fetch_and_store_players("https://minecraftonline.com/wiki/Category:Former_staff", "Former Staff", "wiki")
+    fetch_and_store_players("https://minecraftonline.com/wiki/Category:God_donor", "God Donor", "wiki")
+    fetch_and_store_players("https://minecraftonline.com/cgi-bin/getadminlist.sh", "Admins", "api")
+    fetch_and_store_players("https://minecraftonline.com/cgi-bin/getmodlist.sh", "Moderators", "api")
+    
+    formerstafflist = read_players("Former Staff")
+    godlist = read_players("God Donor")
+    adminlist = read_players("Admins")
+    modlist = read_players("Moderators")
+    
+    player_list_title = tk.Label(window, text="Player list has been refreshed!", font=tkFont.Font(weight="bold", size=11), bg='#383838', fg='#E1E1E1')
+    player_list_title.pack()
+    
+    print("\nPlayer lists have been refreshed.")
     
     return 0 
     
     
         
-        
-        
 ##############################
 # Server Info page functions #
 ##############################
+
+
 
 def server_info_screen():
     global entry
@@ -254,6 +276,8 @@ def server_info_screen():
     button = tk.Button(window, text="Players Online", command=player_online_screen, bg='#545454', fg='#E1E1E1')
     button.pack(pady=10)
     
+    print("\nLoading server information, this might take a couple of seconds...")
+    
     bancount = get_ban_count_from_api()
     bancount_label = create_default_label(window, f"Current number of bans is: {bancount}", None)
     bancount_label.pack()
@@ -265,14 +289,14 @@ def server_info_screen():
     yesterdayvisitors = get_yesterday_visitors_from_api()
     yesterdayvisitors_label = create_default_label(window, f"Number of unique players yesterday was: {yesterdayvisitors}", None)
     yesterdayvisitors_label.pack()
+    
+    print("\nServer information has been loaded.")
 
 def player_online_screen():
     
     global mod_color
     global admin_color
     global banned_color
-    global modlist
-    global adminlist
     
     clear_ui()
     
@@ -296,8 +320,9 @@ def player_online_screen():
 def print_player_list(player_list, frame):
     row = 0
     column = 0
+    
+    global adminlist  
     global modlist
-    global adminlist
     
     online_admin_list = sorted([username for username in player_list if adminlist is not None and username in adminlist])
     online_mod_list = sorted([username for username in player_list if modlist is not None and username in modlist])
@@ -406,11 +431,11 @@ def player_info_operation():
         time_seconds = int(player_info[2])
         banned_info = player_info[3].split(";") if len(player_info) > 3 else ["NOTBANNED"]
         
-        image = get_player_head_from_api(username)
-        photo = ImageTk.PhotoImage(image)
-        image_label = tk.Label(window, image=photo, bg='#383838')
-        image_label.image = photo
-        image_label.pack(pady=10)
+        player_head = get_player_head_from_api(username)
+        player_head_photo = ImageTk.PhotoImage(player_head)
+        player_head_label = tk.Label(window, image=player_head_photo, bg='#383838')
+        player_head_label.player_head = player_head_photo
+        player_head_label.pack(pady=10)
 
         # Check join date and last seen date
         player_info_label = create_default_label(window, f"\nPlayer Information for {username}:", header_font) # Header
@@ -420,7 +445,7 @@ def player_info_operation():
             username_label = tk.Label(window, text=f"{username} is an administrator", font=tkFont.Font(weight="bold", size=11), fg=admin_color, bg='#383838')
         elif username in modlist:
             username_label = tk.Label(window, text=f"{username} is a moderator", font=tkFont.Font(weight="bold", size=11), fg=mod_color, bg='#383838')
-        elif is_user_former_staff(username, "formerstaff.txt"):
+        elif username in formerstafflist:
             username_label = tk.Label(window, text=f"{username} is former staff", font=tkFont.Font(weight="bold", size=11), fg="dark cyan", bg='#383838')
         else:
             username_label = create_default_label(window, f"{username} is not staff", None)
