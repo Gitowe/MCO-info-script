@@ -267,6 +267,8 @@ def refresh_player_lists():
 def server_info_screen():
     global entry
     
+    header_font = tkFont.Font(weight="bold", size=11)
+    
     # Clear the previous UI elements
     clear_ui()
     
@@ -278,17 +280,47 @@ def server_info_screen():
     
     print("\nLoading server information, this might take a couple of seconds...")
     
-    bancount = get_ban_count_from_api()
-    bancount_label = create_default_label(window, f"Current number of bans is: {bancount}", None)
-    bancount_label.pack()
+    player_server_info_label = create_default_label(window, f"\nGeneral player information\n", header_font)
+    player_server_info_label.pack()
     
-    uniquevisitors = get_unique_visitors_from_api()
-    uniquevisitors_label = create_default_label(window, f"Current number of unique players is: {uniquevisitors}", None)
-    uniquevisitors_label.pack()
+    ban_count = get_ban_count_from_api()
+    ban_count_label = create_default_label(window, f"Current number of bans is: {ban_count}", None)
+    ban_count_label.pack()
     
-    yesterdayvisitors = get_yesterday_visitors_from_api()
-    yesterdayvisitors_label = create_default_label(window, f"Number of unique players yesterday was: {yesterdayvisitors}", None)
-    yesterdayvisitors_label.pack()
+    unique_visitors = get_unique_visitors_from_api()
+    unique_visitors_label = create_default_label(window, f"Current number of unique players is: {unique_visitors}", None)
+    unique_visitors_label.pack()
+    
+    yesterday_visitors = get_yesterday_visitors_from_api()
+    yesterday_visitors_label = create_default_label(window, f"Number of unique players yesterday was: {yesterday_visitors}", None)
+    yesterday_visitors_label.pack()
+    
+    unique_visitors_banned = int(ban_count) / int(unique_visitors)
+    unique_visitors_banned_label = create_default_label(window, f"Percentage of unique visitors banned: {unique_visitors_banned * 100:.4f}%", None)
+    unique_visitors_banned_label.pack()
+    
+    staff_server_info_label = create_default_label(window, f"\nGeneral staff information\n", header_font)
+    staff_server_info_label.pack()
+    
+    number_of_admins = len(adminlist)
+    number_of_admins_label = create_default_label(window, f"Number of admins: {number_of_admins}", None)
+    number_of_admins_label.pack()
+    
+    number_of_mods = len(modlist)
+    number_of_mods_label = create_default_label(window, f"Number of mods: {number_of_mods}", None)
+    number_of_mods_label.pack()
+    
+    number_of_formerstaff = len(formerstafflist)
+    number_of_formerstaff_label = create_default_label(window, f"Number of former staff: {number_of_formerstaff}", None)
+    number_of_formerstaff_label.pack()
+    
+    number_of_total_staff = number_of_admins + number_of_mods + number_of_formerstaff
+    number_of_total_staff_label = create_default_label(window, f"Total number of staff: {number_of_total_staff}", None)
+    number_of_total_staff_label.pack()
+    
+    percent_staff = number_of_total_staff / int(unique_visitors)
+    percent_staff_label = create_default_label(window, f"Percentage of player who became staff: {percent_staff * 100:.4f}%", None)
+    percent_staff_label.pack()
     
     print("\nServer information has been loaded.")
 
@@ -306,7 +338,7 @@ def player_online_screen():
     player_list = []
     
     get_player_list_from_api(player_list)
-    print(player_list)
+    print("\nProcessing player list...")
     
     player_list_title = tk.Label(window, text="Players currently online:", font=tkFont.Font(weight="bold", size=11), bg='#383838', fg='#E1E1E1')
     player_list_title.pack()
@@ -317,6 +349,8 @@ def player_online_screen():
         
         print_player_list(player_list, frame)
         
+    print("\nPlayer list has been processed.")
+    
 def print_player_list(player_list, frame):
     row = 0
     column = 0
@@ -357,7 +391,7 @@ def print_player_head(username, frame, row, column):
         player_head_label = tk.Label(frame, image=photo, bg='#383838')
         player_head_label.image = photo
         player_head_label.grid(row=row, column=column, padx=5, pady=5)  # Place the image label in the frame
-        print(username)
+        print(username + " found and loaded")
     else:
         print("Error loading player head")
 
@@ -541,8 +575,16 @@ def player_info_operation():
         
         if wiki_info:
             for key, value in wiki_info.items():
-                wiki_stuff_label = create_default_label(window, f"{key}: {value}", None)
+                if key == "Donor level":
+                    wiki_stuff_label = tk.Label(window, text=f"{key}: {value}", bg='#383838', fg='#00AA00')
+                elif key == "Kit level":
+                    wiki_stuff_label = tk.Label(window, text=f"{key}: {value}", bg='#383838', fg=(check_kit_level(value)))
+                elif key == "Legacy donor level":
+                    wiki_stuff_label = tk.Label(window, text=f"{key}: {value}", bg='#383838', fg=(check_kit_level(value)))
+                else:
+                    wiki_stuff_label = create_default_label(window, f"{key}: {value}", None)
                 wiki_stuff_label.pack()
+                
             wiki_stuff_label = create_default_label(window, f"", None)
             wiki_stuff_label.pack()
         else:
@@ -552,7 +594,32 @@ def player_info_operation():
         copy_button = tk.Button(window, text="Copy Info", command=copy_player_info)
         copy_button.pack(pady=10)
         
+def check_kit_level(value):
+    color = '#E1E1E1'
+    
+    if value == "* Wood":
+        color = '#fefe3f'
+    elif value == "** Stone":
+        color = '#fefe3f'
+    elif value == "*** Iron":
+        color = '#fefe3f'
+    elif value == "**** Gold":
+        color = '#fefe3f'
+    elif value == "***** Diamond":
+        color = '#fefe3f'
+    elif value == "***** Obsidian":
+        color = '#be00be'
+    elif value == "***** Nether":
+        color = '#be0000'
+    elif value == "***** Aether":
+        color = '#3ffefe'
+    elif value == "***** Demigod":
+        color = '#3f3f3f'
+    elif value == "*GOD*":
+        color = '#fefe3f'
         
+    return color
+
         
 ############################
 # Main Menu page functions #
