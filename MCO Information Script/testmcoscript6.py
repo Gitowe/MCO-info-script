@@ -1,3 +1,6 @@
+
+# Main file to run the MCO Information Script
+
 import requests
 import datetime
 import time
@@ -17,18 +20,7 @@ from api_functions import *
 from global_variables import *
 
 print("\nScript is starting, this might take a couple of seconds...")
-
-###################
-# Global variables# 
-###################
-
 print("\nPlayer lists have been fetched and stored.")
-
-
-##################################
-# Functions for basic operations #
-##################################
-
 
 # Converts time (in seconds) into other time measurements
 def convert_seconds(seconds):
@@ -60,8 +52,6 @@ def convert_to_mm_dd_yyyy(timestamp):
 # Functions for tkinter operations #
 ####################################
 
-
-
 # Clears the widgets from the window
 def clear_ui():
     for widget in window.winfo_children():
@@ -80,14 +70,10 @@ def on_enter(event=None):
     
 # Copies the player info into the clipboard
 def copy_player_info():
-    # Get the player information
     username = entry.get()
     
     try:
-         # Format the information to be copied
         copy_text = f"{username}\n"
-
-        # Copy the formatted information to the clipboard
         pyperclip.copy(copy_text)
     except IndexError as e:
         print(f"Error: {e}")
@@ -106,10 +92,7 @@ def create_default_label(parent, text, header):
 # Updated Player Lists page functions #
 #######################################
         
-        
-        
 def update_lists_screen():
-    
     clear_ui()
     
     back_button = tk.Button(window, text="Back", command=show_menu, bg='#545454', fg='#E1E1E1')
@@ -119,7 +102,6 @@ def update_lists_screen():
     button.pack(pady=10)
     
 def refresh_player_lists():
-    
     print("\nRefreshing player lists...")
     
     fetch_and_store_players("https://minecraftonline.com/wiki/Category:Former_staff", "Former Staff", "wiki")
@@ -144,8 +126,6 @@ def refresh_player_lists():
 ###############################
 # Update Sheet page functions #
 ###############################
-
-
 
 # Displays the Update Sheet page #
 def update_excel_screen():
@@ -241,8 +221,6 @@ def update_excel_operation():
 ##############################
 # Server Info page functions #
 ##############################
-
-
 
 def server_info_screen():
     global entry
@@ -413,8 +391,6 @@ def show_timeline():
 # Player Info page functions #
 ##############################
 
-
-
 # Displays the Player Info page
 def player_info_screen():
     global entry
@@ -509,7 +485,7 @@ def player_info_operation():
             time_played_label = create_default_label(window, f"Time Played: Years: {years}, Days: {days}, Hours: {hours}, Minutes: {minutes}, Seconds: {seconds}", None)
             time_played_label.pack()
         else:
-            time_played_label = create_default_label(window, f"Time Played: Days: {days}, Hours: {hours}, Minutes: {minutes}, Seconds: {seconds}", None)
+            time_played_label.pack = create_default_label(window, f"Time Played: Days: {days}, Hours: {hours}, Minutes: {minutes}, Seconds: {seconds}", None)
             time_played_label.pack()
             
         # Check if player is banned
