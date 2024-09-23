@@ -14,6 +14,7 @@ from bs4 import BeautifulSoup
 from PIL import Image, ImageTk
 
 from api_functions import *
+from global_variables import *
 
 print("\nScript is starting, this might take a couple of seconds...")
 
@@ -21,34 +22,12 @@ print("\nScript is starting, this might take a couple of seconds...")
 # Global variables# 
 ###################
 
-
-
-entry = None
-
-banned_color = '#ab3838'
-mod_color = '#55FFFF'
-admin_color = '#FF5555'
-donor_color = '#00AA00'
-
-if not os.path.exists("players.txt"):
-    fetch_and_store_players("https://minecraftonline.com/wiki/Category:Former_staff", "Former Staff", "wiki")
-    fetch_and_store_players("https://minecraftonline.com/wiki/Category:God_donor", "God Donor", "wiki")
-    fetch_and_store_players("https://minecraftonline.com/cgi-bin/getadminlist.sh", "Admins", "api")
-    fetch_and_store_players("https://minecraftonline.com/cgi-bin/getmodlist.sh", "Moderators", "api")
-
-formerstafflist = read_players("Former Staff")
-godlist = read_players("God Donor")
-adminlist = read_players("Admins")
-modlist = read_players("Moderators")
-
 print("\nPlayer lists have been fetched and stored.")
-
 
 
 ##################################
 # Functions for basic operations #
 ##################################
-
 
 
 # Converts time (in seconds) into other time measurements
@@ -120,6 +99,45 @@ def create_default_label(parent, text, header):
     else:
         normal_label = tk.Label(parent, text=text, bg='#383838', fg='#E1E1E1')  # Adjust color as needed
         return normal_label
+    
+
+
+#######################################
+# Updated Player Lists page functions #
+#######################################
+        
+        
+        
+def update_lists_screen():
+    
+    clear_ui()
+    
+    back_button = tk.Button(window, text="Back", command=show_menu, bg='#545454', fg='#E1E1E1')
+    back_button.pack(pady=5, padx=10, anchor='nw')
+    
+    button = tk.Button(window, text="Refresh Player Lists", command=refresh_player_lists, bg='#545454', fg='#E1E1E1')
+    button.pack(pady=10)
+    
+def refresh_player_lists():
+    
+    print("\nRefreshing player lists...")
+    
+    fetch_and_store_players("https://minecraftonline.com/wiki/Category:Former_staff", "Former Staff", "wiki")
+    fetch_and_store_players("https://minecraftonline.com/wiki/Category:God_donor", "God Donor", "wiki")
+    fetch_and_store_players("https://minecraftonline.com/cgi-bin/getadminlist.sh", "Admins", "api")
+    fetch_and_store_players("https://minecraftonline.com/cgi-bin/getmodlist.sh", "Moderators", "api")
+    
+    formerstafflist = read_players("Former Staff")
+    godlist = read_players("God Donor")
+    adminlist = read_players("Admins")
+    modlist = read_players("Moderators")
+    
+    player_list_title = tk.Label(window, text="Player list has been refreshed!", font=tkFont.Font(weight="bold", size=11), bg='#383838', fg='#E1E1E1')
+    player_list_title.pack()
+    
+    print("\nPlayer lists have been refreshed.")
+    
+    return 0 
 
 
 
@@ -195,7 +213,8 @@ def update_excel_operation():
 
             # Iterate through usernames and update the first seen date column
             for row_index, username in enumerate(usernames, start=3):
-                player_info = get_player_info_from_api(username)
+                time.sleep(4)
+                player_info = exponential_backoff_retry(get_player_info_from_api, username)
                 if player_info[0] != "NOTFOUND":
                     join_date = int(player_info[0])
                     formatted_date = convert_unix_timestamp(join_date).split(' - ')[0]  # Extract date only
@@ -217,45 +236,6 @@ def update_excel_operation():
     except Exception as e:
         print(f"Error occurred: {e}")
         
-        
-        
-#######################################
-# Updated Player Lists page functions #
-#######################################
-        
-        
-        
-def update_lists_screen():
-    
-    clear_ui()
-    
-    back_button = tk.Button(window, text="Back", command=show_menu, bg='#545454', fg='#E1E1E1')
-    back_button.pack(pady=5, padx=10, anchor='nw')
-    
-    button = tk.Button(window, text="Refresh Player Lists", command=refresh_player_lists, bg='#545454', fg='#E1E1E1')
-    button.pack(pady=10)
-    
-def refresh_player_lists():
-    
-    print("\nRefreshing player lists...")
-    
-    fetch_and_store_players("https://minecraftonline.com/wiki/Category:Former_staff", "Former Staff", "wiki")
-    fetch_and_store_players("https://minecraftonline.com/wiki/Category:God_donor", "God Donor", "wiki")
-    fetch_and_store_players("https://minecraftonline.com/cgi-bin/getadminlist.sh", "Admins", "api")
-    fetch_and_store_players("https://minecraftonline.com/cgi-bin/getmodlist.sh", "Moderators", "api")
-    
-    formerstafflist = read_players("Former Staff")
-    godlist = read_players("God Donor")
-    adminlist = read_players("Admins")
-    modlist = read_players("Moderators")
-    
-    player_list_title = tk.Label(window, text="Player list has been refreshed!", font=tkFont.Font(weight="bold", size=11), bg='#383838', fg='#E1E1E1')
-    player_list_title.pack()
-    
-    print("\nPlayer lists have been refreshed.")
-    
-    return 0 
-    
     
         
 ##############################
@@ -276,6 +256,9 @@ def server_info_screen():
     back_button.pack(pady=5, padx=10, anchor='nw')  
 
     button = tk.Button(window, text="Players Online", command=player_online_screen, bg='#545454', fg='#E1E1E1')
+    button.pack(pady=10)
+    
+    button = tk.Button(window, text="Server Timeline", command=show_timeline, bg='#545454', fg='#E1E1E1')
     button.pack(pady=10)
     
     print("\nLoading server information, this might take a couple of seconds...")
@@ -315,7 +298,7 @@ def server_info_screen():
     number_of_formerstaff_label.pack()
     
     number_of_total_staff = number_of_admins + number_of_mods + number_of_formerstaff
-    number_of_total_staff_label = create_default_label(window, f"Total number of staff: {number_of_total_staff}", None)
+    number_of_total_staff_label = create_default_label(window, f"Total number of staff of all time: {number_of_total_staff}", None)
     number_of_total_staff_label.pack()
     
     percent_staff = number_of_total_staff / int(unique_visitors)
@@ -347,53 +330,82 @@ def player_online_screen():
         frame = tk.Frame(window, bg='#383838')
         frame.pack(pady=5, padx=10)  # Place the frame in the center of the window
         
-        print_player_list(player_list, frame)
+        global adminlist  
+        global modlist
+        
+        online_admin_list = sorted([username for username in player_list if adminlist is not None and username in adminlist])
+        online_mod_list = sorted([username for username in player_list if modlist is not None and username in modlist])
+        online_player_list = sorted([username for username in player_list if username not in modlist and username not in adminlist])
+        
+        combined_player_list = online_admin_list + online_mod_list + online_player_list
+        
+        num_admins_label = tk.Label(window, text=f"Admins online: {len(online_admin_list)}", font=tkFont.Font(size=9), fg=admin_color, bg='#383838')
+        num_admins_label.pack()
+        
+        num_mods_label = tk.Label(window, text=f"Mods online: {len(online_mod_list)}", font=tkFont.Font(size=9), fg=mod_color, bg='#383838')
+        num_mods_label.pack()
+        
+        num_players_label = tk.Label(window, text=f"Players online: {len(online_player_list)}", font=tkFont.Font(size=9), fg='#E1E1E1', bg='#383838')
+        num_players_label.pack()
+    
+        print_player_list(combined_player_list, frame)
         
     print("\nPlayer list has been processed.")
-    
-def print_player_list(player_list, frame):
-    row = 0
-    column = 0
-    
-    global adminlist  
-    global modlist
-    
-    online_admin_list = sorted([username for username in player_list if adminlist is not None and username in adminlist])
-    online_mod_list = sorted([username for username in player_list if modlist is not None and username in modlist])
-    online_player_list = sorted([username for username in player_list if username not in modlist and username not in adminlist])
-
-    combined_player_list = online_admin_list + online_mod_list + online_player_list
-
-    for username in combined_player_list:
-        print_player_head(username, frame, row, column)
         
-        if username in adminlist:
-            fg_color = admin_color
-        elif username in modlist:
-            fg_color = mod_color
-        else:
-            fg_color = '#E1E1E1'
+def get_timeline_from_mediawiki():
+    url = "https://minecraftonline.com/wiki/Timeline"
+    response = requests.get(url)
+    
+    if response.status_code == 200:
+        soup = BeautifulSoup(response.content, "html.parser")
+        timeline = soup.find("div", class_="mw-parser-output")
+        if timeline:
+            return timeline.get_text()
+    return "Failed to fetch timeline data"
 
-        username_label = tk.Label(frame, text=f"{username}", font=tkFont.Font(size=9), fg=fg_color, bg='#383838')
-        username_label.grid(row=row, column=column + 1, padx=5, pady=2, sticky="w")
-        row += 1
+def show_timeline():
+    timeline_text = get_timeline_from_mediawiki()
+    
+    if timeline_text:
+        popup_window = tk.Toplevel(window)
+        popup_window.title("Server Timeline")
+        popup_window.geometry("800x400")
         
-        if row >= 15:  # Change this value to adjust vertical distance
-            row = 0
-            column += 2
-
-def print_player_head(username, frame, row, column):
-    time.sleep(1.0)
-    image = get_player_head_from_api_small(username)
-    if image:
-        photo = ImageTk.PhotoImage(image)
+        canvas_frame = tk.Frame(popup_window)
+        canvas_frame.pack(fill=tk.BOTH, expand=True)
+        
+        canvas = tk.Canvas(canvas_frame, bg="white", width=780, height=380)
+        canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        
+        scrollbar_x = tk.Scrollbar(canvas_frame, orient=tk.HORIZONTAL, command=canvas.xview)
+        scrollbar_x.pack(side=tk.BOTTOM, fill=tk.X)
+        
+        canvas.config(xscrollcommand=scrollbar_x.set)
+        
+        events = timeline_text.split("\n\n")
+        num_events = len(events)
+        spacing = 700 / num_events  # Adjust the spacing based on the number of events
+        
+        y_position = 50
+        
+        for event in events:
+            event_info = event.split(" - ")
+            if len(event_info) >= 2:
+                date = event_info[0]
+                description = event_info[1]
                 
-        player_head_label = tk.Label(frame, image=photo, bg='#383838')
-        player_head_label.image = photo
-        player_head_label.grid(row=row, column=column, padx=5, pady=5)  # Place the image label in the frame
-        print(username + " found and loaded")
+                canvas.create_text(50, y_position, anchor="w", text=date, font=tkFont.Font(size=10, weight="bold"))
+                canvas.create_text(100, y_position, anchor="w", text=description, font=tkFont.Font(size=10))
+                canvas.create_line(150, y_position + 5, 750, y_position + 5, fill="black")
+                
+                y_position += 20  # Adjust vertical position for the next event
+        
+        canvas.config(scrollregion=canvas.bbox("all"))
+        
     else:
-        print("Error loading player head")
+        error_label = tk.Label(window, text="Failed to fetch timeline data", font=tkFont.Font(size=9), bg='#383838', fg='red')
+        error_label.pack(pady=10, padx=10)
+
 
 
 
@@ -641,12 +653,15 @@ def show_menu():
     
     server_info_button = tk.Button(window, text="Server Info", command=server_info_screen, bg='#545454', fg='#E1E1E1')
     server_info_button.pack(pady=10, side=TOP)
-    
-    update_lists_button = tk.Button(window, text="Update Player Lists", command=update_lists_screen, bg='#545454', fg='#E1E1E1')
-    update_lists_button.pack(pady=10, side=TOP)
 
     update_excel_button = tk.Button(window, text="Update Excel", command=update_excel_screen, bg='#545454', fg='#E1E1E1')
     update_excel_button.pack(pady=10, side=TOP)
+    
+    update_lists_button = tk.Button(window, text="Update Player Lists", command=update_lists_screen, bg='#545454', fg='#E1E1E1')
+    update_lists_button.pack(pady=30, side=TOP)
+    
+    update_lists_button = tk.Button(window, text="Timeline", command=update_lists_screen, bg='#545454', fg='#E1E1E1')
+    update_lists_button.pack(pady=30, side=TOP)
 
 # Application window setup stuff
 window = tk.Tk()

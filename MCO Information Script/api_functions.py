@@ -1,3 +1,7 @@
+
+# This file contains functions that call from MCO's API and the MCO wiki.
+# The functions are used to fetch player information, player heads, ban count, unique visitors, etc.
+
 import requests
 import datetime
 import time
@@ -13,14 +17,9 @@ import openpyxl
 from bs4 import BeautifulSoup
 from PIL import Image, ImageTk
 
+from global_variables import *
 
-
-#######################################
-# Functions for api calling functions #
-#######################################
-
-
-
+# Removes the brackets from the input string (used for the API responses)
 def remove_brackets(input_string):
     lines = input_string
     cleaned_lines = [line[2:-2] if line.startswith("['") and line.endswith("']") else line for line in lines]
@@ -28,6 +27,29 @@ def remove_brackets(input_string):
     cleaned_string = "\n".join(cleaned_lines)
     return cleaned_string
 
+# Function to retry a function with exponential backoff
+# Needed for the API calls as the API will restrict the number of requests if too many are made in a short period of time
+def exponential_backoff_retry(func, *args, max_retries=5, initial_delay=4, backoff_factor=2, **kwargs):
+    retries = 0
+    delay = initial_delay
+    while retries < max_retries:
+        try:
+            return func(*args, **kwargs)
+        except requests.exceptions.RequestException as e:
+            print(f"Error occurred: {e}. Retrying in {delay} seconds.")
+            time.sleep(delay)
+            delay *= backoff_factor
+            retries += 1
+    raise RuntimeError("Max retries exceeded. Unable to fetch data.")
+
+
+
+#######################################
+# Functions for api calling functions #
+#######################################
+
+# Gets the real player name from the MCO API
+# Will correct capitalization and fill in the remaining username if it is partially given
 def get_real_player_name(username):
     url = f"https://minecraftonline.com/cgi-bin/getcorrectname?{username}"
     response = requests.get(url)
@@ -42,6 +64,7 @@ def get_real_player_name(username):
     else:
         return None
 
+# Gets the player's last login time from the MCO API
 def get_player_info_from_api(username):
     url = f"https://minecraftonline.com/cgi-bin/getplayerinfo?{username}"
     response = requests.get(url)
@@ -49,7 +72,8 @@ def get_player_info_from_api(username):
         return response.text.strip().split("\n")
     else:
         return None
-    
+
+# Gets the player's head in 64x64 pixels from the MCO API
 def get_player_head_from_api(username):
     url = f"https://minecraftonline.com/cgi-bin/getplayerhead.sh?{username}&64.png"
     response = requests.get(url)
@@ -58,7 +82,8 @@ def get_player_head_from_api(username):
         return image
     else:
         return None
-    
+
+# Gets the player's head in 16x16 pixels from the MCO API
 def get_player_head_from_api_small(username):
     url = f"https://minecraftonline.com/cgi-bin/getplayerhead.sh?{username}&16.png"
     response = requests.get(url)
@@ -68,7 +93,7 @@ def get_player_head_from_api_small(username):
     else:
         return 
 
-# Gets information from the MCO wiki (specifically from the userpage)
+# Gets the player's information from the MCO wiki, speficically from that player's user page
 def get_player_info_from_wiki(username):
     user_info = {}
     user_page_url = f"https://minecraftonline.com/wiki/User:{username}"
@@ -78,12 +103,10 @@ def get_player_info_from_wiki(username):
         if response.status_code == 200:
             soup = BeautifulSoup(response.content, 'html.parser')
             
-            # Find the user infobox
             infobox = soup.find("table", class_="infobox")
             if infobox:
                 rows = infobox.find_all("tr")
                 for row in rows:
-                    # Extracting key-value pairs from the infobox
                     cells = row.find_all(["th", "td"])
                     if len(cells) == 2:
                         key = cells[0].text.strip()
@@ -100,6 +123,7 @@ def get_player_info_from_wiki(username):
         
     return None
 
+# Gets the server's ban count from the MCO API
 def get_ban_count_from_api():
     url = f"https://minecraftonline.com/cgi-bin/getbancount.sh"
     response = requests.get(url)
@@ -109,7 +133,8 @@ def get_ban_count_from_api():
         return result
     else:
         return None
-    
+
+# Gets the server's unique visitors count from the MCO API
 def get_unique_visitors_from_api():
     url = f"https://minecraftonline.com/cgi-bin/getuniquevisitors.py"
     response = requests.get(url)
@@ -119,7 +144,9 @@ def get_unique_visitors_from_api():
         return result
     else:
         return None
-    
+
+# Gets the server's unique visitors count from the MCO API for the previous day
+# This function is seemingly not accurate, seemingly giving the unique visitors count for the past few hours (if not less)
 def get_yesterday_visitors_from_api():
     url = f"https://minecraftonline.com/cgi-bin/getuniqueyesterday.py"
     response = requests.get(url)
@@ -129,7 +156,8 @@ def get_yesterday_visitors_from_api():
         return result
     else:
         return None
-    
+
+# Gets the server's players that are currently online from the MCO API
 def get_player_list_from_api(player_list):
     url = f"https://minecraftonline.com/cgi-bin/getplayerlist.sh"
     response = requests.get(url)
@@ -147,19 +175,18 @@ def get_player_list_from_api(player_list):
 # Staff list functions/setup #
 ##############################
 
-
-
+# Checks if the user is a former staff member
+# Does this by checking the user's wiki page for the "Former staff" category
+# This may not be accurate as the user may have been a staff member but not listed in the category
 def is_user_former_staff(username, file_path):
-    # Check if former staff list file exists, if not create one
     
     if not os.path.exists(file_path):
         with open(file_path, "w") as file:
-            pass  # Create an empty file
+            pass 
 
-    # Check if the user is listed in the former staff list file
     with open(file_path, "r") as file:
         if username in file.read().split("\n"):
-            return True  # User is a former staff
+            return True
 
     user_page_url = f"https://minecraftonline.com/wiki/User:{username}"
 
@@ -168,17 +195,14 @@ def is_user_former_staff(username, file_path):
         if response.status_code == 200:
             soup = BeautifulSoup(response.content, 'html.parser')
 
-            # Search for the categories section
             categories_section = soup.find("div", class_="mw-normal-catlinks")
             if categories_section:
-                # Check if "Former staff" category is present
                 categories = categories_section.find_all("a")
                 for category in categories:
                     if "Former_staff" in category.get("href", ""):
-                        # Add the user to the former staff list file
                         with open(file_path, "a") as file:
                             file.write(username + "\n")
-                        return True  # User is a former staff
+                        return True
 
         else:
             print(f"Failed to retrieve user information. Error code: {response.status_code}")
@@ -192,91 +216,43 @@ def is_user_former_staff(username, file_path):
 ########################
 # Player list functions#
 ########################
+
+# Prints the player list in the GUI
+def print_player_list(combined_player_list, frame):
+    row = 0
+    column = 0
+    
+    global adminlist  
+    global modlist
+    
+    for username in combined_player_list:
+        print_player_head(username, frame, row, column)
         
-        
-        
-def read_players(player_type):
-    # Read content from the text file
-    with open("players.txt", "r") as file:
-        lines = file.readlines()
-
-    # Initialize a list to store player names
-    player_names = []
-
-    # Flag to check if the current line belongs to the specified player type
-    player_type_found = False
-
-    # Iterate through the lines in the file
-    for line in lines:
-        if line.strip() == f"-[{player_type}]-":
-            player_type_found = True
-        elif player_type_found:
-            # If player type header is found, add subsequent names until next header is encountered
-            if line.strip() == "":
-                break
-            player_names.append(line.strip())
-
-    return player_names
-
-def fetch_and_store_players(url, player_type, source="wiki"):
-
-    if source == "wiki":
-        
-        response = requests.get(url)
-        if response.status_code == 200:
-            soup = BeautifulSoup(response.content, 'html.parser')
-            links = soup.find_all("a")
-            user_links = [link.get("href")[11:] for link in links if link.get("href") and link.get("href").startswith("/wiki/User:")]
-            user_list = list(set(user_links))
-            user_list.sort()
+        if username in adminlist:
+            fg_color = admin_color
+        elif username in modlist:
+            fg_color = mod_color
         else:
-            print("Failed to fetch the wiki page. Status code:", response.status_code)
-            return
+            fg_color = '#E1E1E1'
 
-    elif source == "api":
+        username_label = tk.Label(frame, text=f"{username}", font=tkFont.Font(size=9), fg=fg_color, bg='#383838')
+        username_label.grid(row=row, column=column + 1, padx=5, pady=2, sticky="w")
+        row += 1
         
-        response = requests.get(url)
-        if response.status_code == 200:
-            user_list = response.text.strip().split("\n")
-        else:
-            print("Failed to retrieve names from the api.Status code:", response.status_code)
-            return
-        
+        if row >= 15:  # Change this value to adjust vertical distance
+            row = 0
+            column += 2
+
+# Prints the player head in the GUI
+def print_player_head(username, frame, row, column):
+    time.sleep(4.0)
+    image = get_player_head_from_api_small(username)
+    if image:
+        photo = ImageTk.PhotoImage(image)
+                
+        player_head_label = tk.Label(frame, image=photo, bg='#383838')
+        player_head_label.image = photo
+        player_head_label.grid(row=row, column=column, padx=5, pady=5)  # Place the image label in the frame
+        print(username + " found and loaded")
     else:
-        print("Invalid source type.")
-        return
-
-    if not os.path.exists("players.txt"):
-        with open("players.txt", "w") as file:
-            file.write(f"-[{player_type}]-\n")
-            for user in user_list:
-                file.write(user + "\n")
-            file.write("\n")
-        print(f"Created players.txt and saved names of {player_type}.")
-        return
-
-    with open("players.txt", "r") as file:
-        lines = file.readlines()
-
-    header_index = None
-    for i, line in enumerate(lines):
-        if line.strip() == f"-[{player_type}]-":
-            header_index = i
-            break
-
-    new_content = f"-[{player_type}]-\n"
-    for user in user_list:
-        new_content += user + "\n"
-    new_content += "\n"
-
-    if header_index is not None:
-        lines[header_index+1:] = new_content.splitlines(True)[1:]
-    else:
-        lines.append(new_content)
-
-    with open("players.txt", "w") as file:
-        file.writelines(lines)
-
-    print(f"Names of {player_type} have been saved/updated in players.txt.")
-
-
+        print("Error loading player head")
