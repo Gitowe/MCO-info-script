@@ -78,7 +78,7 @@ def copy_player_info():
     except IndexError as e:
         print(f"Error: {e}")
         
-def create_default_label(parent, text, header):
+def default_label(parent, text, header):
     if header:
         header_label = tk.Label(parent, text=text, font=header, bg='#383838', fg='#E1E1E1')  # Adjust color as needed
         return header_label
@@ -89,17 +89,18 @@ def create_default_label(parent, text, header):
 
 
 #######################################
-# Updated Player Lists page functions #
+# Update Player Lists page functions #
 #######################################
-        
+           
 def update_lists_screen():
+    header_font = tkFont.Font(weight="bold", size=11)
     clear_ui()
     
     back_button = tk.Button(window, text="Back", command=show_menu, bg='#545454', fg='#E1E1E1')
     back_button.pack(pady=5, padx=10, anchor='nw')
     
-    button = tk.Button(window, text="Refresh Player Lists", command=refresh_player_lists, bg='#545454', fg='#E1E1E1')
-    button.pack(pady=10)
+    refresh_lists_button = tk.Button(window, text="Refresh Player Lists", command=refresh_player_lists, bg='#545454', fg='#E1E1E1')
+    refresh_lists_button.pack(pady=10)
     
 def refresh_player_lists():
     print("\nRefreshing player lists...")
@@ -114,8 +115,8 @@ def refresh_player_lists():
     adminlist = read_players("Admins")
     modlist = read_players("Moderators")
     
-    player_list_title = tk.Label(window, text="Player list has been refreshed!", font=tkFont.Font(weight="bold", size=11), bg='#383838', fg='#E1E1E1')
-    player_list_title.pack()
+    list_refreshed_header = default_label(window, "Player list has been refreshed!", header_font)
+    list_refreshed_header.pack()
     
     print("\nPlayer lists have been refreshed.")
     
@@ -131,31 +132,31 @@ def refresh_player_lists():
 def update_excel_screen():
     global entry_filename
     global entry_sheetname
-    
     clear_ui()
     
     back_button = tk.Button(window, text="Back", command=show_menu, bg='#545454', fg='#E1E1E1')
-    back_button.pack(pady=5, padx=10, anchor='nw')  # 'nw' stands for northwest, i.e., top-left corner
+    back_button.pack(pady=5, padx=10, anchor='nw')
 
-    label_filename = create_default_label(window, "Enter Excel file name (with extension):", None)
-    label_filename.pack(pady=15)
+    filename_label = default_label(window, "Enter Excel file name (with extension):", None)
+    filename_label.pack(pady=15)
 
-    entry_filename = tk.Entry(window, bg='#545454', fg='#E1E1E1')
-    entry_filename.pack(pady=10)
+    filename_entry = tk.Entry(window, bg='#545454', fg='#E1E1E1')
+    filename_entry.pack(pady=10)
 
-    label_sheetname = create_default_label(window, "Enter sheet name:", None)
-    label_sheetname.pack(pady=15)
+    sheetname_label = default_label(window, "Enter sheet name:", None)
+    sheetname_label.pack(pady=15)
 
-    entry_sheetname = tk.Entry(window, bg='#545454', fg='#E1E1E1')
-    entry_sheetname.pack(pady=10)
+    sheetname_entry = tk.Entry(window, bg='#545454', fg='#E1E1E1')
+    sheetname_entry.pack(pady=10)
 
-    button_update_excel_operation = tk.Button(window, text="Update Excel", command=update_excel_operation, bg='#545454', fg='#E1E1E1')
-    button_update_excel_operation.pack()
+    update_excel_button = tk.Button(window, text="Update Excel", command=update_excel_operation, bg='#545454', fg='#E1E1E1')
+    update_excel_button.pack()
 
 # Updates the excel sheet with correct information based on the names listed in the excel sheet
 def update_excel_operation():
     global entry_filename
     global entry_sheetname
+    
     try:
         # Get the Excel file name and sheet name from the user
         excel_file = entry_filename.get()
@@ -224,85 +225,78 @@ def update_excel_operation():
 
 def server_info_screen():
     global entry
-    
     header_font = tkFont.Font(weight="bold", size=11)
-    
-    # Clear the previous UI elements
     clear_ui()
     
     back_button = tk.Button(window, text="Back", command=show_menu, bg='#545454', fg='#E1E1E1')
     back_button.pack(pady=5, padx=10, anchor='nw')  
 
-    button = tk.Button(window, text="Players Online", command=player_online_screen, bg='#545454', fg='#E1E1E1')
-    button.pack(pady=10)
-    
-    button = tk.Button(window, text="Server Timeline", command=show_timeline, bg='#545454', fg='#E1E1E1')
-    button.pack(pady=10)
+    players_online_button = tk.Button(window, text="Players Online", command=player_online_screen, bg='#545454', fg='#E1E1E1')
+    players_online_button.pack(pady=10)
     
     print("\nLoading server information, this might take a couple of seconds...")
     
-    player_server_info_label = create_default_label(window, f"\nGeneral player information\n", header_font)
-    player_server_info_label.pack()
+    server_info_header = default_label(window, f"\nGeneral server information\n", header_font)
+    server_info_header.pack()
     
     ban_count = get_ban_count_from_api()
-    ban_count_label = create_default_label(window, f"Current number of bans is: {ban_count}", None)
+    ban_count_label = default_label(window, f"Current number of bans is: {ban_count}", None)
     ban_count_label.pack()
     
     unique_visitors = get_unique_visitors_from_api()
-    unique_visitors_label = create_default_label(window, f"Current number of unique players is: {unique_visitors}", None)
+    unique_visitors_label = default_label(window, f"Current number of unique players is: {unique_visitors}", None)
     unique_visitors_label.pack()
     
     yesterday_visitors = get_yesterday_visitors_from_api()
-    yesterday_visitors_label = create_default_label(window, f"Number of unique players yesterday was: {yesterday_visitors}", None)
+    yesterday_visitors_label = default_label(window, f"Number of unique players yesterday was: {yesterday_visitors}", None)
     yesterday_visitors_label.pack()
     
     unique_visitors_banned = int(ban_count) / int(unique_visitors)
-    unique_visitors_banned_label = create_default_label(window, f"Percentage of unique visitors banned: {unique_visitors_banned * 100:.4f}%", None)
+    unique_visitors_banned_label = default_label(window, f"Percentage of unique visitors banned: {unique_visitors_banned * 100:.4f}%", None)
     unique_visitors_banned_label.pack()
     
-    staff_server_info_label = create_default_label(window, f"\nGeneral staff information\n", header_font)
-    staff_server_info_label.pack()
+    staff_info_header = default_label(window, f"\nGeneral staff information\n", header_font)
+    staff_info_header.pack()
     
-    number_of_admins = len(adminlist)
-    number_of_admins_label = create_default_label(window, f"Number of admins: {number_of_admins}", None)
-    number_of_admins_label.pack()
+    admin_count = len(adminlist)
+    admin_count_label = default_label(window, f"Number of admins: {number_of_admins}", None)
+    admin_count_label.pack()
     
-    number_of_mods = len(modlist)
-    number_of_mods_label = create_default_label(window, f"Number of mods: {number_of_mods}", None)
-    number_of_mods_label.pack()
+    mod_count = len(modlist)
+    mod_count_label = default_label(window, f"Number of mods: {number_of_mods}", None)
+    mod_count_label.pack()
     
-    number_of_formerstaff = len(formerstafflist)
-    number_of_formerstaff_label = create_default_label(window, f"Number of former staff: {number_of_formerstaff}", None)
-    number_of_formerstaff_label.pack()
+    formerstaff_count = len(formerstafflist)
+    formerstaff_count_label = default_label(window, f"Number of former staff: {number_of_formerstaff}", None)
+    formerstaff_count_label.pack()
     
-    number_of_total_staff = number_of_admins + number_of_mods + number_of_formerstaff
-    number_of_total_staff_label = create_default_label(window, f"Total number of staff of all time: {number_of_total_staff}", None)
-    number_of_total_staff_label.pack()
+    staff_count = number_of_admins + number_of_mods + number_of_formerstaff
+    staff_count_label = default_label(window, f"Total number of staff of all time: {number_of_total_staff}", None)
+    staff_count_label.pack()
     
     percent_staff = number_of_total_staff / int(unique_visitors)
-    percent_staff_label = create_default_label(window, f"Percentage of player who became staff: {percent_staff * 100:.4f}%", None)
+    percent_staff_label = default_label(window, f"Percentage of player who became staff: {percent_staff * 100:.4f}%", None)
     percent_staff_label.pack()
     
     print("\nServer information has been loaded.")
 
 def player_online_screen():
-    
     global mod_color
     global admin_color
     global banned_color
-    
+    header_font = tkFont.Font(weight="bold", size=11)
     clear_ui()
     
     back_button = tk.Button(window, text="Back", command=server_info_screen, bg='#545454', fg='#E1E1E1')
-    back_button.pack(pady=5, padx=10, anchor='nw')  # 'nw' stands for northwest, i.e., top-left corner
+    back_button.pack(pady=5, padx=10, anchor='nw')
    
     player_list = []
     
     get_player_list_from_api(player_list)
     print("\nProcessing player list...")
     
-    player_list_title = tk.Label(window, text="Players currently online:", font=tkFont.Font(weight="bold", size=11), bg='#383838', fg='#E1E1E1')
-    player_list_title.pack()
+    players_online_header = default_label(window, "Players currently online:", header_font)
+    players_online_header.pack()
    
     if player_list:
         frame = tk.Frame(window, bg='#383838')
@@ -323,68 +317,13 @@ def player_online_screen():
         num_mods_label = tk.Label(window, text=f"Mods online: {len(online_mod_list)}", font=tkFont.Font(size=9), fg=mod_color, bg='#383838')
         num_mods_label.pack()
         
-        num_players_label = tk.Label(window, text=f"Players online: {len(online_player_list)}", font=tkFont.Font(size=9), fg='#E1E1E1', bg='#383838')
-        num_players_label.pack()
+        players_online_label = tk.Label(window, text=f"Players online: {len(online_player_list)}", font=tkFont.Font(size=9), fg='#E1E1E1', bg='#383838')
+        players_online_label.pack()
     
         print_player_list(combined_player_list, frame)
         
     print("\nPlayer list has been processed.")
         
-def get_timeline_from_mediawiki():
-    url = "https://minecraftonline.com/wiki/Timeline"
-    response = requests.get(url)
-    
-    if response.status_code == 200:
-        soup = BeautifulSoup(response.content, "html.parser")
-        timeline = soup.find("div", class_="mw-parser-output")
-        if timeline:
-            return timeline.get_text()
-    return "Failed to fetch timeline data"
-
-def show_timeline():
-    timeline_text = get_timeline_from_mediawiki()
-    
-    if timeline_text:
-        popup_window = tk.Toplevel(window)
-        popup_window.title("Server Timeline")
-        popup_window.geometry("800x400")
-        
-        canvas_frame = tk.Frame(popup_window)
-        canvas_frame.pack(fill=tk.BOTH, expand=True)
-        
-        canvas = tk.Canvas(canvas_frame, bg="white", width=780, height=380)
-        canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-        
-        scrollbar_x = tk.Scrollbar(canvas_frame, orient=tk.HORIZONTAL, command=canvas.xview)
-        scrollbar_x.pack(side=tk.BOTTOM, fill=tk.X)
-        
-        canvas.config(xscrollcommand=scrollbar_x.set)
-        
-        events = timeline_text.split("\n\n")
-        num_events = len(events)
-        spacing = 700 / num_events  # Adjust the spacing based on the number of events
-        
-        y_position = 50
-        
-        for event in events:
-            event_info = event.split(" - ")
-            if len(event_info) >= 2:
-                date = event_info[0]
-                description = event_info[1]
-                
-                canvas.create_text(50, y_position, anchor="w", text=date, font=tkFont.Font(size=10, weight="bold"))
-                canvas.create_text(100, y_position, anchor="w", text=description, font=tkFont.Font(size=10))
-                canvas.create_line(150, y_position + 5, 750, y_position + 5, fill="black")
-                
-                y_position += 20  # Adjust vertical position for the next event
-        
-        canvas.config(scrollregion=canvas.bbox("all"))
-        
-    else:
-        error_label = tk.Label(window, text="Failed to fetch timeline data", font=tkFont.Font(size=9), bg='#383838', fg='red')
-        error_label.pack(pady=10, padx=10)
-
-
 
 
 ##############################
@@ -394,15 +333,13 @@ def show_timeline():
 # Displays the Player Info page
 def player_info_screen():
     global entry
-    
-    # Clear the previous UI elements
     clear_ui()
     
     back_button = tk.Button(window, text="Back", command=show_menu, bg='#545454', fg='#E1E1E1')
-    back_button.pack(pady=5, padx=10, anchor='nw')  # 'nw' stands for northwest, i.e., top-left corner
+    back_button.pack(pady=5, padx=10, anchor='nw')
 
     # Create the elements for Player Info screen
-    label = create_default_label(window, "Enter Minecraft username:", None)
+    label = default_label(window, "Enter Minecraft username:", None)
     label.pack(pady=15)
 
     entry = tk.Entry(window, bg='#545454', fg='#E1E1E1')
@@ -427,24 +364,26 @@ def player_info_operation():
     header_font = tkFont.Font(weight="bold", size=11)
     
     entry_input = entry.get()
+    
     username = get_real_player_name(entry_input)
     print(username)
+    
     player_info = get_player_info_from_api(username)
     print(player_info)
     
     clear_player_info()
     
     if username == "INVALID":
-        player_info_label = create_default_label(window, f"\nInvalid player name.\n", header_font)
+        player_info_label = default_label(window, f"\nInvalid player name.\n", header_font)
         player_info_label.pack()
         return
     elif username == "NOTFOUND":
-        player_info_label = create_default_label(window, f"\nPlayer not found.\n", header_font)
+        player_info_label = default_label(window, f"\nPlayer not found.\n", header_font)
         player_info_label.pack()
         return
     
     if player_info[0] == None:
-        player_info_label = create_default_label(window, f"\nError in getting player name.\n", header_font)
+        player_info_label = default_label(window, f"\nError while getting player name.\n", header_font)
         player_info_label.pack()
         
     else:
@@ -460,8 +399,8 @@ def player_info_operation():
         player_head_label.pack(pady=10)
 
         # Check join date and last seen date
-        player_info_label = create_default_label(window, f"\nPlayer Information for {username}:", header_font) # Header
-        player_info_label.pack()
+        player_header = default_label(window, f"\nPlayer Information for {username}:", header_font) # Header
+        player_header.pack()
         
         if username in adminlist:
             username_label = tk.Label(window, text=f"{username} is an administrator", font=tkFont.Font(weight="bold", size=11), fg=admin_color, bg='#383838')
@@ -470,44 +409,44 @@ def player_info_operation():
         elif username in formerstafflist:
             username_label = tk.Label(window, text=f"{username} is former staff", font=tkFont.Font(weight="bold", size=11), fg="dark cyan", bg='#383838')
         else:
-            username_label = create_default_label(window, f"{username} is not staff", None)
+            username_label = default_label(window, f"{username} is not staff", None)
         username_label.pack()
 
-        join_date_label = create_default_label(window, f"Joined: {convert_unix_timestamp(join_date)}", None)
-        join_date_label.pack()
+        first_seen_label = default_label(window, f"First Seen: {convert_unix_timestamp(join_date)}", None)
+        first_seen_label.pack()
 
-        last_seen_label = create_default_label(window, f"Last Seen: {convert_unix_timestamp(last_seen)}", None)
+        last_seen_label = default_label(window, f"Last Seen: {convert_unix_timestamp(last_seen)}", None)
         last_seen_label.pack()
 
         # Check time played
         years, days, hours, minutes, seconds = convert_seconds(time_seconds)
         if years > 0:
-            time_played_label = create_default_label(window, f"Time Played: Years: {years}, Days: {days}, Hours: {hours}, Minutes: {minutes}, Seconds: {seconds}", None)
+            time_played_label = default_label(window, f"Time Played: Years: {years}, Days: {days}, Hours: {hours}, Minutes: {minutes}, Seconds: {seconds}", None)
             time_played_label.pack()
         else:
-            time_played_label.pack = create_default_label(window, f"Time Played: Days: {days}, Hours: {hours}, Minutes: {minutes}, Seconds: {seconds}", None)
+            time_played_label = default_label(window, f"Time Played: Days: {days}, Hours: {hours}, Minutes: {minutes}, Seconds: {seconds}", None)
             time_played_label.pack()
             
         # Check if player is banned
-        ban_info_label = create_default_label(window, f"\nBan Information for {username}:", header_font) # Header
-        ban_info_label.pack()
+        ban_info_header = default_label(window, f"\nBan Information for {username}:", header_font)
+        ban_info_header.pack()
 
         if banned_info[0] != 'NOTBANNED':
             ban_status_label = tk.Label(window, text=f"Player is banned", fg=banned_color, bg='#383838', font=tkFont.Font(weight="bold", size=11))
             ban_status_label.pack()
         else:
-            ban_status_label = create_default_label(window, f"Player is not banned", None)
+            ban_status_label = default_label(window, f"Player is not banned", None)
             ban_status_label.pack()
 
         if banned_info[0] != "NOTBANNED":
-            ban_reason_label = create_default_label(window, f"Ban Reason: {banned_info[2]}", None)
+            ban_reason_label = default_label(window, f"Ban Reason: {banned_info[2]}", None)
             ban_reason_label.pack()
             
-            ban_date_label = create_default_label(window, f"Ban Info: Banned by {banned_info[0]} on {convert_unix_timestamp(int(banned_info[1]))}", None)
+            ban_date_label = default_label(window, f"Ban Info: Banned by {banned_info[0]} on {convert_unix_timestamp(int(banned_info[1]))}", None)
             ban_date_label.pack()
             
-        calc_info_label = create_default_label(window, f"\nPlayer Calculations for {username}:", header_font) # Header
-        calc_info_label.pack()
+        calc_info_header = default_label(window, f"\nPlayer Calculations for {username}:", header_font)
+        calc_info_header.pack()
             
         # Time since join date calculation
         current_time = datetime.datetime.now().timestamp()
@@ -515,20 +454,20 @@ def player_info_operation():
         years, days, hours, minutes, seconds = convert_seconds(time_since_joined)
         if years > 0:
             
-            time_since_join_label = create_default_label(window, f"Time Since Joined: Years: {years}, Days: {days}, Hours: {hours}, Minutes: {minutes}, Seconds: {seconds}", None)
+            time_since_join_label = default_label(window, f"Time Since Joined: Years: {years}, Days: {days}, Hours: {hours}, Minutes: {minutes}, Seconds: {seconds}", None)
             time_since_join_label.pack()
         else:
-            time_since_join_label = create_default_label(window, f"Time Since Joined: Days: {days}, Hours: {hours}, Minutes: {minutes}, Seconds: {seconds}", None)
+            time_since_join_label = default_label(window, f"Time Since Joined: Days: {days}, Hours: {hours}, Minutes: {minutes}, Seconds: {seconds}", None)
             time_since_join_label.pack()
         
         # Time since last seen calculation
         time_since_last_seen = int(current_time - last_seen)
         years, days, hours, minutes, seconds = convert_seconds(time_since_last_seen)
         if years > 0:
-            time_since_lastseen_label = create_default_label(window, f"Time Since Last Seen: Years: {years}, Days: {days}, Hours: {hours}, Minutes: {minutes}, Seconds: {seconds}", None)
+            time_since_lastseen_label = default_label(window, f"Time Since Last Seen: Years: {years}, Days: {days}, Hours: {hours}, Minutes: {minutes}, Seconds: {seconds}", None)
             time_since_lastseen_label.pack()
         else:
-            time_since_lastseen_label = create_default_label(window, f"Time Since Last Seen: Days: {days}, Hours: {hours}, Minutes: {minutes}, Seconds: {seconds}", None)
+            time_since_lastseen_label = default_label(window, f"Time Since Last Seen: Days: {days}, Hours: {hours}, Minutes: {minutes}, Seconds: {seconds}", None)
             time_since_lastseen_label.pack()
 
         # Time since ban calculation
@@ -536,30 +475,31 @@ def player_info_operation():
             time_since_ban = int(current_time - int(banned_info[1]))
             years, days, hours, minutes, seconds = convert_seconds(time_since_ban)
             if years > 0:
-                time_since_ban_label = create_default_label(window, f"Time Since Ban: Years: {years}, Days: {days}, Hours: {hours}, Minutes: {minutes}, Seconds: {seconds}", None)
+                time_since_ban_label = default_label(window, f"Time Since Ban: Years: {years}, Days: {days}, Hours: {hours}, Minutes: {minutes}, Seconds: {seconds}", None)
                 time_since_ban_label.pack()
             else:
-                time_since_ban_label = create_default_label(window, f"Time Since Ban: Days: {days}, Hours: {hours}, Minutes: {minutes}, Seconds: {seconds}", None)
+                time_since_ban_label = default_label(window, f"Time Since Ban: Days: {days}, Hours: {hours}, Minutes: {minutes}, Seconds: {seconds}", None)
                 time_since_ban_label.pack()
                 
             
         # Time spent playing since joining calculation
         total_percent_playtime = float(time_seconds / time_since_joined)
-        percent_time_since_joining_label = create_default_label(window, f"Percentage of time spent playing since joining: {total_percent_playtime * 100:.4f}%", None)
+        percent_time_since_joining_label = default_label(window, f"Percentage of time spent playing since joining: {total_percent_playtime * 100:.4f}%", None)
         percent_time_since_joining_label.pack()
         
         percent_playtime_before_lastseen = float(time_seconds / (time_since_joined - time_since_last_seen))
-        percent_time_since_lastseen_label = create_default_label(window, f"Percentage of time spent playing before last seen: {percent_playtime_before_lastseen * 100:.4f}%", None)
+        percent_time_since_lastseen_label = default_label(window, f"Percentage of time spent playing before last seen: {percent_playtime_before_lastseen * 100:.4f}%", None)
         percent_time_since_lastseen_label.pack()
         
         if banned_info[0] != "NOTBANNED":
             percent_playtime_before_ban = float(time_seconds / (time_since_joined - time_since_ban))
-            percent_time_since_ban_label = create_default_label(window, f"Percentage of time spent playing before ban: {percent_playtime_before_ban * 100:.4f}%", None)
+            percent_time_since_ban_label = default_label(window, f"Percentage of time spent playing before ban: {percent_playtime_before_ban * 100:.4f}%", None)
             percent_time_since_ban_label.pack()
             
+        # Check wiki information about player
         wiki_info = get_player_info_from_wiki(username)
-        wiki_info_label = create_default_label(window,f"\nWiki Information for {username}:", header_font) # Header
-        wiki_info_label.pack()
+        wiki_info_header = default_label(window,f"\nWiki Information for {username}:", header_font)
+        wiki_info_header.pack()
         
         if wiki_info:
             for key, value in wiki_info.items():
@@ -570,13 +510,13 @@ def player_info_operation():
                 elif key == "Legacy donor level":
                     wiki_stuff_label = tk.Label(window, text=f"{key}: {value}", bg='#383838', fg=(check_kit_level(value)))
                 else:
-                    wiki_stuff_label = create_default_label(window, f"{key}: {value}", None)
+                    wiki_stuff_label = default_label(window, f"{key}: {value}", None)
                 wiki_stuff_label.pack()
                 
-            wiki_stuff_label = create_default_label(window, f"", None)
+            wiki_stuff_label = default_label(window, f"", None)
             wiki_stuff_label.pack()
         else:
-            wiki_stuff_label = create_default_label(window, f"User not found on the wiki\n", None)
+            wiki_stuff_label = default_label(window, f"User not found on the wiki\n", None)
             wiki_stuff_label.pack()
         
         copy_button = tk.Button(window, text="Copy Info", command=copy_player_info)
@@ -617,10 +557,9 @@ def check_kit_level(value):
 
 # Displays the initial menu
 def show_menu():
-    # Clear the previous UI elements
     clear_ui()
 
-    # Create the menu buttons
+    # Main menu buttons
     spacer = tk.Label(window, text="", bg='#383838')
     spacer.pack(pady=50)
     
