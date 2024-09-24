@@ -77,7 +77,8 @@ def copy_player_info():
         pyperclip.copy(copy_text)
     except IndexError as e:
         print(f"Error: {e}")
-        
+
+# Functions that make the default widgets for the tkinter window       
 def default_label(parent, text, header):
     if header:
         header_label = tk.Label(parent, text=text, font=header, bg='#383838', fg='#E1E1E1')  # Adjust color as needed
@@ -85,6 +86,14 @@ def default_label(parent, text, header):
     else:
         normal_label = tk.Label(parent, text=text, bg='#383838', fg='#E1E1E1')  # Adjust color as needed
         return normal_label
+    
+def default_button(parent, text, command):
+    normal_button = tk.Button(parent, text=text, command=command, bg='#545454', fg='#E1E1E1') # Adjust color as needed
+    return normal_button
+
+def back_button():
+    back_button = tk.Button(window, text="Back", command=show_menu, bg='#545454', fg='#E1E1E1')
+    back_button.pack(pady=5, padx=10, anchor='nw')
     
 
 
@@ -96,9 +105,8 @@ def update_lists_screen():
     header_font = tkFont.Font(weight="bold", size=11)
     clear_ui()
     
-    back_button = tk.Button(window, text="Back", command=show_menu, bg='#545454', fg='#E1E1E1')
-    back_button.pack(pady=5, padx=10, anchor='nw')
-    
+    back_button()
+
     refresh_lists_button = tk.Button(window, text="Refresh Player Lists", command=refresh_player_lists, bg='#545454', fg='#E1E1E1')
     refresh_lists_button.pack(pady=10)
     
