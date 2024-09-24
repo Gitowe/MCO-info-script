@@ -103,8 +103,8 @@ def back_button():
            
 def update_lists_screen():
     header_font = tkFont.Font(weight="bold", size=11)
-    clear_ui()
     
+    clear_ui()
     back_button()
 
     refresh_lists_button = tk.Button(window, text="Refresh Player Lists", command=refresh_player_lists, bg='#545454', fg='#E1E1E1')
@@ -140,10 +140,9 @@ def refresh_player_lists():
 def update_excel_screen():
     global entry_filename
     global entry_sheetname
-    clear_ui()
     
-    back_button = tk.Button(window, text="Back", command=show_menu, bg='#545454', fg='#E1E1E1')
-    back_button.pack(pady=5, padx=10, anchor='nw')
+    clear_ui()
+    back_button()
 
     filename_label = default_label(window, "Enter Excel file name (with extension):", None)
     filename_label.pack(pady=15)
@@ -234,10 +233,9 @@ def update_excel_operation():
 def server_info_screen():
     global entry
     header_font = tkFont.Font(weight="bold", size=11)
-    clear_ui()
     
-    back_button = tk.Button(window, text="Back", command=show_menu, bg='#545454', fg='#E1E1E1')
-    back_button.pack(pady=5, padx=10, anchor='nw')  
+    clear_ui()
+    back_button()
 
     players_online_button = tk.Button(window, text="Players Online", command=player_online_screen, bg='#545454', fg='#E1E1E1')
     players_online_button.pack(pady=10)
@@ -293,10 +291,9 @@ def player_online_screen():
     global admin_color
     global banned_color
     header_font = tkFont.Font(weight="bold", size=11)
-    clear_ui()
     
-    back_button = tk.Button(window, text="Back", command=server_info_screen, bg='#545454', fg='#E1E1E1')
-    back_button.pack(pady=5, padx=10, anchor='nw')
+    clear_ui()
+    back_button()
    
     player_list = []
     
@@ -341,10 +338,9 @@ def player_online_screen():
 # Displays the Player Info page
 def player_info_screen():
     global entry
-    clear_ui()
     
-    back_button = tk.Button(window, text="Back", command=show_menu, bg='#545454', fg='#E1E1E1')
-    back_button.pack(pady=5, padx=10, anchor='nw')
+    clear_ui()
+    back_button()
 
     # Create the elements for Player Info screen
     label = default_label(window, "Enter Minecraft username:", None)
